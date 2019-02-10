@@ -7,14 +7,14 @@ import {
   View,
   TextInput,
   Picker,
-  TouchableOpacity
+  TouchableHighlight
 } from 'react-native';
 
 export default class AddExpense extends React.Component {
   state = {
     date: null,
     amount: null,
-    category: null,
+    category: 'Accounting',
     image: null
   };
 
@@ -36,11 +36,14 @@ export default class AddExpense extends React.Component {
       ),
       headerBackTitle: 'Cancel'
     }
-  };
-
+  }
 
   selectCategory = () => {
+    this.props.navigation.navigate('SelectCategory', { selected: this.state.category, setCategory: this.setCategory });
+  }
 
+  setCategory = (item) => {
+    this.setState({ category: item });
   }
 
   render() {
@@ -89,23 +92,23 @@ export default class AddExpense extends React.Component {
               onChangeText={(amount) => this.setState({amount})}
             />
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Category</Text>
-            <TouchableOpacity
-              style={{
-                flex: 1,
-              }}
-              onPress={this.selectCategory}>
+          <TouchableHighlight
+            style={{
+              flex: 1
+            }}
+            onPress={this.selectCategory}
+            underlayColor="lightgrey" >
+            <View style={styles.row}>
+              <Text style={styles.label}>Category</Text>
               <Text
                 style={{
                   fontSize: 18,
                   textAlign: 'right'
                 }}>
-                Select >
+                {this.state.category} ›
               </Text>
-            </TouchableOpacity>
-          </View>
-
+            </View>
+          </TouchableHighlight>
 
           {/*<Picker
   selectedValue={this.state.language}
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // padding: 10,
     // paddingTop: 40,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     // borderTopWidth: 1,
     // borderTopColor: 'grey'
   },
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'grey',
+    borderBottomColor: 'lightgrey',
     justifyContent: 'space-between',
   },
   label: {
