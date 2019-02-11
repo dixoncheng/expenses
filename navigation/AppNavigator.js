@@ -1,9 +1,7 @@
 import React from 'react';
-// import { createSwitchNavigator } from 'react-navigation';
+import 'react-native-gesture-handler';
 import { createStackNavigator, createBottomTabNavigator, createAppContainer } from 'react-navigation';
-
 import { Platform } from 'react-native';
-// import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
 
@@ -12,20 +10,12 @@ import AddExpense from '../screens/AddExpense';
 import SelectCategoryScreen from '../screens/SelectCategoryScreen';
 // import CameraRollScreen from '../screens/CameraRollScreen';
 
-import LinksScreen from '../screens/LinksScreen';
-// import SettingsScreen from '../screens/SettingsScreen';
-
-
+import ReportsScreen from '../screens/ReportsScreen';
 
 const HomeStack = createStackNavigator({
   Home: HomeScreen,
-  // AddExpense: AddExpense,
-  // SelectCategory: SelectCategoryScreen,
-  
-  // CameraRoll: CameraRollScreen,
-
+  // Expense: Expense
 });
-
 
 HomeStack.navigationOptions = {
   tabBarLabel: 'Expenses',
@@ -41,11 +31,11 @@ HomeStack.navigationOptions = {
   ),
 };
 
-const LinksStack = createStackNavigator({
-  Links: LinksScreen,
+const ReportsStack = createStackNavigator({
+  Links: ReportsScreen,
 });
 
-LinksStack.navigationOptions = {
+ReportsStack.navigationOptions = {
   tabBarLabel: 'Reports',
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
@@ -55,66 +45,23 @@ LinksStack.navigationOptions = {
   ),
 };
 
-// const SettingsStack = createStackNavigator({
-//   Settings: SettingsScreen,
-// });
-
-// SettingsStack.navigationOptions = {
-//   tabBarLabel: 'Settings',
-//   tabBarIcon: ({ focused }) => (
-//     <TabBarIcon
-//       focused={focused}
-//       name={Platform.OS === 'ios' ? `ios-options${focused ? '' : '-outline'}` : 'md-options'}
-//     />
-//   ),
-// };
-
-// export default createBottomTabNavigator({
-//   HomeStack,
-//   LinksStack
-//   // SettingsStack,
-// });
-
-
-
-
-// import MainTabNavigator from './MainTabNavigator';
-
-// export default createSwitchNavigator({
-//   // You could add another route here for authentication.
-//   // Read more at https://reactnavigation.org/docs/en/auth-flow.html
-//   Main: MainTabNavigator,
-// });
-
 const TabNavigator = createBottomTabNavigator({
   HomeStack,
-  LinksStack
+  ReportsStack
 });
-
 
 const AddExpenseStack = createStackNavigator({
-  
   AddExpense: AddExpense,
-  SelectCategory: SelectCategoryScreen,
-  
-  // CameraRoll: CameraRollScreen,
-
+  SelectCategory: SelectCategoryScreen
 });
 
-
 const RootStack = createStackNavigator({
-  // Home: HomeScreen,
-  
-  // SelectCategory: SelectCategoryScreen,
   TabNavigator: TabNavigator,
-  // CameraRoll: CameraRollScreen,
   AddExpense: AddExpenseStack,
-
 }, {
   headerMode: 'none',
   mode: 'modal'
 });
-
 
 
 export default createAppContainer(RootStack);

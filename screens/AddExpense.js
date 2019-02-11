@@ -6,7 +6,6 @@ import {
   Button,
   View,
   TextInput,
-  Picker,
   TouchableHighlight,
   DatePickerIOS,
   TouchableOpacity,
@@ -38,7 +37,7 @@ export default class AddExpense extends React.Component {
     const { params = {} } = navigation.state;
 
     return {
-      headerTitle: 'Add Expenses',
+      headerTitle: 'Add Expense',
       headerLeft: (
         <Button
           onPress={() => navigation.navigate('TabNavigator')}
@@ -70,9 +69,7 @@ export default class AddExpense extends React.Component {
 
   takePhoto = async () => {
     if (this.camera) {
-      // this.camera.pausePreview();
       let photo = await this.camera.takePictureAsync();
-      // console.log(photo);
       this.setState({photo});
     }
   }
@@ -91,7 +88,7 @@ export default class AddExpense extends React.Component {
       aspect: [4, 3],
     });
 
-    console.log(result);
+    // console.log(result);
 
     if (!result.cancelled) {
       this.setState({ photo: result });
@@ -102,34 +99,6 @@ export default class AddExpense extends React.Component {
   render() {
     return (
       <SafeAreaView style={styles.container}>
-
-        {/*<View style={{
-          // flex: 1,
-          flexDirection: 'row',
-          // justifyContent: 'space-between',
-          alignItems: 'center',
-          borderBottomWidth: 1,
-          borderBottomColor: 'grey'
-        }}>
-          <Button
-            style={{ flex: 1, borderWidth: 1 }}
-            title="Cancel"
-            onPress={this.props.onClose} />
-
-          <Text style={{ flex: 1,
-            textAlign: 'center',
-            fontSize: 17,
-            // fontWeight: 'bold' 
-            }}
-          >
-            Add Expense
-          </Text>
-
-          <Button
-            style={{ flex: 1, borderWidth: 1 }}
-            title="Save"
-            onPress={this.props.onClose} />
-        </View>*/}
 
         <View style={{ flex: 1 }}>
           <View style={styles.row}>
@@ -179,7 +148,6 @@ export default class AddExpense extends React.Component {
               style={{
                 flex: 1,
                 backgroundColor: 'transparent',
-                // flexDirection: 'row',
                 justifyContent: 'flex-end',
               }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10, paddingRight: 10, }}>
@@ -224,11 +192,7 @@ export default class AddExpense extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // padding: 10,
-    // paddingTop: 40,
     backgroundColor: 'white',
-    // borderTopWidth: 1,
-    // borderTopColor: 'grey'
   },
   row: {
     flexDirection: 'row',

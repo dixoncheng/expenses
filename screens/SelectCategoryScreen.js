@@ -4,7 +4,8 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
-  View
+  View,
+  Button
 } from 'react-native';
 
 import Categories from '../constants/Categories';
@@ -21,6 +22,12 @@ export default class selectCategory extends React.Component {
     return {
       headerTitle: 'Category',
       // headerBackTitle: 'Back'
+      headerLeft: (
+        <Button
+          onPress={() => navigation.navigate('AddExpense')}
+          title="Cancel"
+        />
+      ),
     }
   }
 

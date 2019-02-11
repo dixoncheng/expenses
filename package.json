@@ -17,7 +17,7 @@
     "expo": "^30.0.1",
     "react": "16.7.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
-    "react-native-camera": "^1.10.1",
+    "react-native-gesture-handler": "^1.0.15",
     "react-navigation": "^3.1.2"
   },
   "devDependencies": {
