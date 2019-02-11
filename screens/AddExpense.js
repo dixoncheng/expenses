@@ -7,19 +7,31 @@ import {
   View,
   TextInput,
   Picker,
-  TouchableHighlight
+  TouchableHighlight,
+  DatePickerIOS,
+  TouchableOpacity,
+  ImageBackground,
+  SafeAreaView
 } from 'react-native';
+
+import { Camera, Permissions, ImagePicker } from 'expo';
 
 export default class AddExpense extends React.Component {
   state = {
-    date: null,
+    date: new Date(),
     amount: null,
     category: 'Accounting',
-    image: null
+    photo: null,
+    hasCameraPermission: null
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     this.props.navigation.setParams({ save: () => alert('saved') });
+
+    const { status } = await Permissions.askAsync(Permissions.CAMERA);
+    this.setState({ hasCameraPermission: status === 'granted' });
+
+    await Permissions.askAsync(Permissions.CAMERA_ROLL);
   }
 
   static navigationOptions = ({ navigation }) => {
@@ -27,6 +39,12 @@ export default class AddExpense extends React.Component {
 
     return {
       headerTitle: 'Add Expenses',
+      headerLeft: (
+        <Button
+          onPress={() => navigation.navigate('TabNavigator')}
+          title="Cancel"
+        />
+      ),
       headerRight: (
         <Button
           // onPress={navigation.getParam('save')}
@@ -34,7 +52,7 @@ export default class AddExpense extends React.Component {
           title="Save"
         />
       ),
-      headerBackTitle: 'Cancel'
+      // headerBackTitle: 'Cancel'
     }
   }
 
@@ -46,9 +64,44 @@ export default class AddExpense extends React.Component {
     this.setState({ category: item });
   }
 
+  setDate = (newDate) => {
+    this.setState({ date: newDate });
+  }
+
+  takePhoto = async () => {
+    if (this.camera) {
+      // this.camera.pausePreview();
+      let photo = await this.camera.takePictureAsync();
+      // console.log(photo);
+      this.setState({photo});
+    }
+  }
+
+  retakePhoto = () => {
+    this.setState({ photo: null }, () => {
+      // if (this.camera) {
+      //   this.camera.resumePreview();
+      // }  
+    });
+  }
+
+  pickPhoto = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      // allowsEditing: true,
+      aspect: [4, 3],
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      this.setState({ photo: result });
+    }
+  };
+
+
   render() {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
 
         {/*<View style={{
           // flex: 1,
@@ -78,7 +131,7 @@ export default class AddExpense extends React.Component {
             onPress={this.props.onClose} />
         </View>*/}
 
-        <ScrollView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
           <View style={styles.row}>
             <Text style={styles.label}>Amount</Text>
             <TextInput
@@ -92,10 +145,8 @@ export default class AddExpense extends React.Component {
               onChangeText={(amount) => this.setState({amount})}
             />
           </View>
+          
           <TouchableHighlight
-            style={{
-              flex: 1
-            }}
             onPress={this.selectCategory}
             underlayColor="lightgrey" >
             <View style={styles.row}>
@@ -110,26 +161,62 @@ export default class AddExpense extends React.Component {
             </View>
           </TouchableHighlight>
 
-          {/*<Picker
-  selectedValue={this.state.language}
-  style={{height: 50, width: 100}}
-  onValueChange={(itemValue, itemIndex) =>
-    this.setState({language: itemValue})
-  }>
-  <Picker.Item label="Java" value="java" />
-  <Picker.Item label="JavaScript" value="js" />
-</Picker>*/}
+          <DatePickerIOS
+            date={this.state.date}
+            onDateChange={this.setDate}
+            mode="date"
+            style={{ 
+              borderBottomWidth: 1,
+              borderBottomColor: 'lightgrey' 
+            }}
+          />
 
+          {this.state.hasCameraPermission === null || this.state.hasCameraPermission === false && <View />}
 
+          {this.state.hasCameraPermission === true && !this.state.photo && 
+          <Camera ref={ref => { this.camera = ref; }} style={{ flex: 1 }} type="back">
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: 'transparent',
+                // flexDirection: 'row',
+                justifyContent: 'flex-end',
+              }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10, paddingRight: 10, }}>
+                <View style={{ flex: 1 }}></View>
 
-            {/*Date
+                <View style={{ flex: 1 }}>
+                  <Button
+                    title="Take photo"
+                    onPress={this.takePhoto} />
+                </View>
 
-            Category
+                <TouchableOpacity style={{ flex: 1 }}
+                  onPress={ this.pickPhoto }
+                  style={{ flex: 1 }}>
+                  <Text style={{ textAlign: 'right', color: 'white' }}>Gallery</Text>
+                </TouchableOpacity>
+                
+              </View>
+            </View>
+          </Camera>
+          }
 
-            Camera */}
+          {this.state.photo && 
+            <ImageBackground source={this.state.photo} style={{
+              flex: 1, 
+              width: '100%',
+              justifyContent: 'flex-end'
+            }}>
+              <Button
+                title="Retake photo" 
+                onPress={this.retakePhoto} />
+            </ImageBackground>
+          }
 
-        </ScrollView>
-      </View>
+        </View>
+
+      </SafeAreaView>
     );
   }
 }

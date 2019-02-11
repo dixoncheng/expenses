@@ -14,12 +14,14 @@
   },
   "dependencies": {
     "@expo/samples": "2.1.1",
-    "expo": "^32.0.3",
+    "expo": "^30.0.1",
     "react": "16.7.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
+    "react-native-camera": "^1.10.1",
     "react-navigation": "^3.1.2"
   },
   "devDependencies": {
+    "@expo/vector-icons": "^9.0.0",
     "jest-expo": "32.0.0"
   }
 }
