@@ -56,9 +56,8 @@ const AddExpenseStack = createStackNavigator({
 });
 
 const RootStack = createStackNavigator({
-  AddExpense: AddExpenseStack,
   TabNavigator: TabNavigator,
-  
+  AddExpense: AddExpenseStack
 }, {
   headerMode: 'none',
   mode: 'modal'

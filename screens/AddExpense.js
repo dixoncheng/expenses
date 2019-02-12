@@ -62,29 +62,23 @@ export default class AddExpense extends React.Component {
   }
 
   save = async () => {
-    this.setState({ loading: true });
-    // alert('saved');
-
-    // console.log(this.state.photo);
-
     // show loading spinner
-    // save to db
-    // upload photo
+    this.setState({ loading: true });
     
+    // upload photo
     let uploadUrl = this.state.photo ? await this.uploadImageAsync(this.state.photo.uri) : '';
-
-    // firebase.database().ref(this.state.date.getTime()).set({
-    firebase.database().ref(new Date().getTime()).set({
+    
+    // save to db
+    await firebase.database().ref(new Date().getTime()).set({
       date: this.state.date.getTime(),
       amount: this.state.amount,
       category: this.state.category,
       photo: uploadUrl || ''
     });
-
+    
     // back to list
     this.setState({ loading: false });
     this.props.navigation.navigate('TabNavigator');
-
   }
 
   uploadImageAsync = async (uri) => {
@@ -161,90 +155,87 @@ export default class AddExpense extends React.Component {
   render() {
     return (
       <SafeAreaView style={styles.container}>
-
-        <View style={{ flex: 1 }}>
+        
+        <View style={styles.row}>
+          <Text style={styles.label}>Amount</Text>
+          <TextInput
+            style={{
+              fontSize: 18,
+              flex: 1,
+              textAlign: 'right'
+            }}
+            keyboardType="number-pad"
+            placeholder="0"
+            onChangeText={(amount) => this.setState({amount})}
+          />
+        </View>
+        
+        <TouchableHighlight
+          onPress={this.selectCategory}
+          underlayColor="lightgrey" >
           <View style={styles.row}>
-            <Text style={styles.label}>Amount</Text>
-            <TextInput
+            <Text style={styles.label}>Category</Text>
+            <Text
               style={{
                 fontSize: 18,
-                flex: 1,
                 textAlign: 'right'
-              }}
-              keyboardType="number-pad"
-              placeholder="0"
-              onChangeText={(amount) => this.setState({amount})}
-            />
-          </View>
-          
-          <TouchableHighlight
-            onPress={this.selectCategory}
-            underlayColor="lightgrey" >
-            <View style={styles.row}>
-              <Text style={styles.label}>Category</Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  textAlign: 'right'
-                }}>
-                {this.state.category} ›
-              </Text>
-            </View>
-          </TouchableHighlight>
-
-          <DatePickerIOS
-            date={this.state.date}
-            onDateChange={this.setDate}
-            mode="date"
-            style={{ 
-              borderBottomWidth: 1,
-              borderBottomColor: 'lightgrey' 
-            }}
-          />
-
-          {this.state.hasCameraPermission === null || this.state.hasCameraPermission === false && <View />}
-
-          {this.state.hasCameraPermission === true && !this.state.photo && 
-          <Camera ref={ref => { this.camera = ref; }} style={{ flex: 1 }} type="back">
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: 'transparent',
-                justifyContent: 'flex-end',
               }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10, paddingRight: 10, }}>
-                <View style={{ flex: 1 }}></View>
+              {this.state.category} ›
+            </Text>
+          </View>
+        </TouchableHighlight>
 
-                <View style={{ flex: 1 }}>
-                  <Button
-                    title="Take photo"
-                    onPress={this.takePhoto} />
-                </View>
+        <DatePickerIOS
+          date={this.state.date}
+          onDateChange={this.setDate}
+          mode="date"
+          style={{ 
+            borderBottomWidth: 1,
+            borderBottomColor: 'lightgrey' 
+          }}
+        />
 
-                <TouchableOpacity style={{ flex: 1 }}
-                  onPress={ this.pickPhoto }
-                  style={{ flex: 1 }}>
-                  <Text style={{ textAlign: 'right', color: 'white' }}>Gallery</Text>
-                </TouchableOpacity>
-                
-              </View>
-            </View>
-          </Camera>
-          }
+        {this.state.hasCameraPermission === null || this.state.hasCameraPermission === false && <View />}
 
-          {this.state.photo && 
-            <ImageBackground source={this.state.photo} style={{
-              flex: 1, 
-              width: '100%',
-              justifyContent: 'flex-end'
+        {this.state.hasCameraPermission === true && !this.state.photo && 
+        <Camera ref={ref => { this.camera = ref; }} style={{ flex: 1 }} type="back">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: 'transparent',
+              justifyContent: 'flex-end',
             }}>
-              <Button
-                title="Retake photo" 
-                onPress={this.retakePhoto} />
-            </ImageBackground>
-          }
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 10, paddingRight: 10, }}>
+              <View style={{ flex: 1 }}></View>
 
-        </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  title="Take photo"
+                  onPress={this.takePhoto} />
+              </View>
+
+              <TouchableOpacity style={{ flex: 1 }}
+                onPress={ this.pickPhoto }
+                style={{ flex: 1 }}>
+                <Text style={{ textAlign: 'right', color: 'white' }}>Gallery</Text>
+              </TouchableOpacity>
+              
+            </View>
+          </View>
+        </Camera>
+        }
+
+        {this.state.photo && 
+          <ImageBackground source={this.state.photo} style={{
+            flex: 1, 
+            width: '100%',
+            justifyContent: 'flex-end'
+          }}>
+            <Button
+              title="Retake photo" 
+              onPress={this.retakePhoto} />
+          </ImageBackground>
+        }
 
         
         <Modal
@@ -264,7 +255,6 @@ export default class AddExpense extends React.Component {
             <ActivityIndicator color="#fff" animating size="large" />
           </View>
         </Modal>
-
 
       </SafeAreaView>
     );
