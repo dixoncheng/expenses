@@ -1,5 +1,4 @@
 import React from 'react';
-import 'react-native-gesture-handler';
 import { createStackNavigator, createBottomTabNavigator, createAppContainer } from 'react-navigation';
 import { Platform } from 'react-native';
 
@@ -12,9 +11,15 @@ import SelectCategoryScreen from '../screens/SelectCategoryScreen';
 
 import ReportsScreen from '../screens/ReportsScreen';
 
+const ExpenseStack = createStackNavigator({
+  Expense: ExpenseScreen,
+  SelectCategory: SelectCategoryScreen
+});
+
 const HomeStack = createStackNavigator({
   Home: HomeScreen,
-  // Expense: Expense
+  Expense: ExpenseScreen,
+  SelectCategory: SelectCategoryScreen
 });
 
 HomeStack.navigationOptions = {
@@ -50,14 +55,9 @@ const TabNavigator = createBottomTabNavigator({
   ReportsStack
 });
 
-const ExpenseStack = createStackNavigator({
-  Expense: ExpenseScreen,
-  SelectCategory: SelectCategoryScreen
-});
-
 const RootStack = createStackNavigator({
   TabNavigator: TabNavigator,
-  Expense: ExpenseStack
+  AddExpense: ExpenseStack
 }, {
   headerMode: 'none',
   mode: 'modal'

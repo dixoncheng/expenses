@@ -22,15 +22,23 @@ import uuid from 'uuid';
 
 export default class AddExpense extends React.Component {
   state = {
+    key: null,
     date: new Date(),
     amount: null,
     category: 'Accounting',
     photo: null,
+    notes: null,
     hasCameraPermission: null,
     loading: false
   };
 
   async componentDidMount() {
+    let item = this.props.navigation.getParam('item');
+    if(item) {
+      item.date = new Date(item.date);
+      this.setState(item);  
+    }
+
     this.props.navigation.setParams({ save: this.save });
 
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
@@ -43,11 +51,11 @@ export default class AddExpense extends React.Component {
     const { params = {} } = navigation.state;
 
     return {
-      headerTitle: 'Add Expense',
+      headerTitle: params.item ? 'Edit Expense' : 'Add Expense',
       headerLeft: (
         <Button
-          onPress={() => navigation.navigate('TabNavigator')}
-          title="Cancel"
+          onPress={() => params.item ? navigation.navigate('Home') : navigation.navigate('TabNavigator')}
+          title={ params.item ? 'Back' : 'Cancel' }
         />
       ),
       headerRight: (
@@ -66,19 +74,30 @@ export default class AddExpense extends React.Component {
     this.setState({ loading: true });
     
     // upload photo
-    let uploadUrl = this.state.photo ? await this.uploadImageAsync(this.state.photo.uri) : '';
+    let photoUrl = '';
+    if(this.state.photo.uri) {
+      photoUrl = await this.uploadImageAsync(this.state.photo.uri);
+    } else if(this.state.photo && !this.state.photo.uri) {
+      photoUrl = this.state.photo;
+    }
     
     // save to db
-    await firebase.database().ref(new Date().getTime()).set({
+    await firebase.database().ref(this.state.key || new Date().getTime()).set({
       date: this.state.date.getTime(),
       amount: this.state.amount,
       category: this.state.category,
-      photo: uploadUrl || ''
+      notes: this.state.notes,
+      photo: photoUrl || ''
     });
     
     // back to list
     this.setState({ loading: false });
-    this.props.navigation.navigate('TabNavigator');
+    
+    if(this.state.key) {
+      this.props.navigation.navigate('Home');
+    } else {
+      this.props.navigation.navigate('TabNavigator');
+    }
   }
 
   uploadImageAsync = async (uri) => {
@@ -167,6 +186,7 @@ export default class AddExpense extends React.Component {
             keyboardType="number-pad"
             placeholder="0"
             onChangeText={(amount) => this.setState({amount})}
+            value={this.state.amount}
           />
         </View>
         
@@ -184,6 +204,21 @@ export default class AddExpense extends React.Component {
             </Text>
           </View>
         </TouchableHighlight>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Notes</Text>
+          <TextInput
+            style={{
+              fontSize: 18,
+              flex: 1,
+              textAlign: 'right'
+            }}
+            // keyboardType="number-pad"
+            // placeholder="0"
+            onChangeText={(notes) => this.setState({notes})}
+            value={this.state.notes}
+          />
+        </View>
 
         <DatePickerIOS
           date={this.state.date}
@@ -226,7 +261,7 @@ export default class AddExpense extends React.Component {
         }
 
         {this.state.photo && 
-          <ImageBackground source={this.state.photo} style={{
+          <ImageBackground source={this.state.photo.uri ? this.state.photo: { url: this.state.photo }} style={{
             flex: 1, 
             width: '100%',
             justifyContent: 'flex-end'

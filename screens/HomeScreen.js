@@ -35,7 +35,7 @@ export default class HomeScreen extends React.Component {
   }
 
   _addExpense(visible) {
-    this.props.navigation.navigate('Expense');
+    this.props.navigation.navigate('AddExpense');
   }
 
   static navigationOptions = ({ navigation }) => {
@@ -54,9 +54,8 @@ export default class HomeScreen extends React.Component {
   };
 
   onItemPress = (item) => {
-    console.log(item);
-    // this.props.navigation.navigate('AddExpense')
-    
+    // console.log(item);
+    this.props.navigation.navigate('Expense', { item });
   }
 
   render() {
