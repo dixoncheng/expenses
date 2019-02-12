@@ -15,10 +15,12 @@
   "dependencies": {
     "@expo/samples": "2.1.1",
     "expo": "^30.0.1",
+    "firebase": "^5.8.2",
     "react": "16.7.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-30.0.0.tar.gz",
     "react-native-gesture-handler": "^1.0.15",
-    "react-navigation": "^3.1.2"
+    "react-navigation": "^3.1.2",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@expo/vector-icons": "^9.0.0",

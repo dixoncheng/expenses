@@ -1,3 +1,5 @@
+import * as firebase from 'firebase';
+
 import React from 'react';
 import { 
   ScrollView,
@@ -10,9 +12,12 @@ import {
   DatePickerIOS,
   TouchableOpacity,
   ImageBackground,
-  SafeAreaView
+  SafeAreaView,
+  ActivityIndicator,
+  Modal
 } from 'react-native';
 
+import uuid from 'uuid';
 import { Camera, Permissions, ImagePicker } from 'expo';
 
 export default class AddExpense extends React.Component {
@@ -21,11 +26,12 @@ export default class AddExpense extends React.Component {
     amount: null,
     category: 'Accounting',
     photo: null,
-    hasCameraPermission: null
+    hasCameraPermission: null,
+    loading: false
   };
 
   async componentDidMount() {
-    this.props.navigation.setParams({ save: () => alert('saved') });
+    this.props.navigation.setParams({ save: this.save });
 
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
     this.setState({ hasCameraPermission: status === 'granted' });
@@ -54,6 +60,62 @@ export default class AddExpense extends React.Component {
       // headerBackTitle: 'Cancel'
     }
   }
+
+  save = async () => {
+    this.setState({ loading: true });
+    // alert('saved');
+
+    // console.log(this.state.photo);
+
+    // show loading spinner
+    // save to db
+    // upload photo
+    
+    let uploadUrl = this.state.photo ? await this.uploadImageAsync(this.state.photo.uri) : '';
+
+    // firebase.database().ref(this.state.date.getTime()).set({
+    firebase.database().ref(new Date().getTime()).set({
+      date: this.state.date.getTime(),
+      amount: this.state.amount,
+      category: this.state.category,
+      photo: uploadUrl || ''
+    });
+
+    // back to list
+    this.setState({ loading: false });
+    this.props.navigation.navigate('TabNavigator');
+
+  }
+
+  uploadImageAsync = async (uri) => {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+
+    const ref = firebase
+      .storage()
+      .ref()
+      .child(uuid.v4());
+    const snapshot = await ref.put(blob);
+
+    // We're done with the blob, close and release it
+    blob.close();
+
+    return await snapshot.ref.getDownloadURL();
+  }
+
 
   selectCategory = () => {
     this.props.navigation.navigate('SelectCategory', { selected: this.state.category, setCategory: this.setCategory });
@@ -183,6 +245,26 @@ export default class AddExpense extends React.Component {
           }
 
         </View>
+
+        
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={this.state.loading}
+          >
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            ]}>
+            <ActivityIndicator color="#fff" animating size="large" />
+          </View>
+        </Modal>
+
 
       </SafeAreaView>
     );
