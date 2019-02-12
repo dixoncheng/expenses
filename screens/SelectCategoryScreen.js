@@ -24,7 +24,7 @@ export default class selectCategory extends React.Component {
       // headerBackTitle: 'Back'
       headerLeft: (
         <Button
-          onPress={() => navigation.navigate('AddExpense')}
+          onPress={() => navigation.navigate('Expense')}
           title="Cancel"
         />
       ),

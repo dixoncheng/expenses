@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import TabBarIcon from '../components/TabBarIcon';
 
 import HomeScreen from '../screens/HomeScreen';
-import AddExpense from '../screens/AddExpense';
+import ExpenseScreen from '../screens/ExpenseScreen';
 import SelectCategoryScreen from '../screens/SelectCategoryScreen';
 // import CameraRollScreen from '../screens/CameraRollScreen';
 
@@ -50,14 +50,14 @@ const TabNavigator = createBottomTabNavigator({
   ReportsStack
 });
 
-const AddExpenseStack = createStackNavigator({
-  AddExpense: AddExpense,
+const ExpenseStack = createStackNavigator({
+  Expense: ExpenseScreen,
   SelectCategory: SelectCategoryScreen
 });
 
 const RootStack = createStackNavigator({
   TabNavigator: TabNavigator,
-  AddExpense: AddExpenseStack
+  Expense: ExpenseStack
 }, {
   headerMode: 'none',
   mode: 'modal'

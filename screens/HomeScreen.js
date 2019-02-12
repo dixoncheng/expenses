@@ -35,7 +35,7 @@ export default class HomeScreen extends React.Component {
   }
 
   _addExpense(visible) {
-    this.props.navigation.navigate('AddExpense');
+    this.props.navigation.navigate('Expense');
   }
 
   static navigationOptions = ({ navigation }) => {

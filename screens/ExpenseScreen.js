@@ -1,5 +1,3 @@
-import * as firebase from 'firebase';
-
 import React from 'react';
 import { 
   ScrollView,
@@ -17,8 +15,10 @@ import {
   Modal
 } from 'react-native';
 
-import uuid from 'uuid';
 import { Camera, Permissions, ImagePicker } from 'expo';
+import * as firebase from 'firebase';
+import uuid from 'uuid';
+
 
 export default class AddExpense extends React.Component {
   state = {
