@@ -183,7 +183,7 @@ export default class AddExpense extends React.Component {
               flex: 1,
               textAlign: 'right'
             }}
-            keyboardType="number-pad"
+            keyboardType="decimal-pad"
             placeholder="0"
             onChangeText={(amount) => this.setState({amount})}
             value={this.state.amount}
