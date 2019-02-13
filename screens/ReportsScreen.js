@@ -13,6 +13,9 @@ import { MailComposer } from 'expo';
 
 import * as firebase from 'firebase';
 import moment from 'moment';
+import XLSX from 'xlsx';
+
+import Categories from '../constants/Categories';
 
 export default class ReportsScreen extends React.Component {
   state = {
@@ -45,7 +48,7 @@ export default class ReportsScreen extends React.Component {
       this.setState({ items: arr });
 
       // generate csv
-      
+      this.generateReport(arr);
 
 
       this.setState({ loading: false });
@@ -60,6 +63,75 @@ export default class ReportsScreen extends React.Component {
       // alert('Report has been emailed');
 
     });
+  }
+
+  generateReport = (arr) => {
+    let sheetHeadingsCounters = [];
+    let data = [];
+    let fmt = '$0.00';
+    for (let i = 0; i < arr.length; i++) {
+
+      let c = sheetHeadingsCounters[arr[i].category] + 1 || 0;
+      let cell = { 
+        v: parseFloat(arr[i].amount || 0),
+        z: fmt,
+        c: arr[i].notes ? [{ t: arr[i].notes }] : null,
+        t: 'n'
+      }
+      if(cell.c) {
+        cell.c.hidden = true;
+      }
+
+      // if row exists and nothing in the category cell
+      if(data[c] && !data[c][arr[i].category]) {
+        data[c][arr[i].category] = cell;
+        
+      } else {
+
+        // if(data[c]) {
+        //   console.log(data[c][arr[i].category]);  
+        // }
+
+
+        let row = {};
+        row[arr[i].category] = cell;
+        data.push(row);
+      }
+
+      sheetHeadingsCounters[arr[i].category] = c;
+    }
+    
+    // console.log(sheetHeadingsCounters);
+
+    // add empty row to separate totals
+    data.push({ ' ': '' });  
+
+    // add totals row
+    let row = {};
+    for (let i = 0; i < Categories.length; i++) {
+      row[Categories[i]] = {
+        f: `=SUM(${XLSX.utils.encode_cell({ r:1, c:i })}:${XLSX.utils.encode_cell({ r:data.length, c:i })})`,
+        z: fmt,
+        t: 'n'
+      }
+    }
+    data.push(row);  
+    
+    // console.log(data);
+
+    const ws = XLSX.utils.json_to_sheet(data, { header: Categories });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+    /* write file */
+    // const wbout = XLSX.write(wb, {type:'binary', bookType:"xlsx"});
+    // const file = DDP + "sheetjsw.xlsx";
+    // writeFile(file, output(wbout), 'ascii').then((res) =>{
+    //     // Alert.alert("exportFile success", "Exported to " + file);
+    // }).catch((err) => { console.log("exportFile Error", "Error " + err.message); });
+
+    XLSX.writeFile(wb, 'test.xlsx');
+
   }
 
   render() {

@@ -19,13 +19,14 @@ import { Camera, Permissions, ImagePicker } from 'expo';
 import * as firebase from 'firebase';
 import uuid from 'uuid';
 
+import Categories from '../constants/Categories';
 
 export default class AddExpense extends React.Component {
   state = {
     key: null,
     date: new Date(),
     amount: null,
-    category: 'Accounting',
+    category: Categories[0],
     photo: null,
     notes: null,
     hasCameraPermission: null,
