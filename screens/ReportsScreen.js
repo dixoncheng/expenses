@@ -6,10 +6,11 @@ import {
   DatePickerIOS,
   Button,
   ActivityIndicator,
-  Modal
+  Modal,
+  Share
 } from 'react-native';
 
-import { MailComposer } from 'expo';
+import { FileSystem } from 'expo';
 
 import * as firebase from 'firebase';
 import moment from 'moment';
@@ -22,7 +23,9 @@ export default class ReportsScreen extends React.Component {
     dateFrom: new Date(),
     dateTo: new Date(),
     loading: false,
-    items: []
+    // items: [],
+    showingModal: false,
+    filename: ''
   };
 
   static navigationOptions = {
@@ -35,34 +38,37 @@ export default class ReportsScreen extends React.Component {
 
   setDateTo = (newDate) => {
     this.setState({ dateTo: newDate });
-  };
+  }
 
-  onGenerate = () => {
-    this.setState({ loading: true });
+  onGenerate = async () => {
+    this.setState({ showingModal: true, loading: true });
 
     // retrieve all expenses for the chosen dates
-    firebase.database().ref('/').once('value').then((snapshot) => {
+    let snapshot = await firebase.database().ref('/').once('value'); //.then((snapshot) => {
 
       let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
       // console.log(arr);
-      this.setState({ items: arr });
+      // this.setState({ items: arr });
 
       // generate csv
-      this.generateReport(arr);
+      let report = this.generateReport(arr);
+
+      // const fileString = await FileSystem.readAsStringAsync(uri)
+
+      // console.log(report);
+      let filename = `${FileSystem.documentDirectory}Expenses-${moment(this.state.dateFrom).format('MMM-YY')}-${moment(this.state.dateTo).format('MMM-YY')}.xlsx`;
+      // let filename = `${FileSystem.documentDirectory}/Expenses ${moment(this.state.dateFrom).format('MMM YY')} - ${moment(this.state.dateTo).format('MMM YY')}.xlsx`;
+
+      // await FileSystem.writeAsStringAsync(filename, report);
+      await FileSystem.writeAsStringAsync(filename, report, { encoding: 'FileSystem.EncodingTypes.Base64' });
+      
+      console.log(report);
 
 
-      this.setState({ loading: false });
+      this.setState({ loading: false, filename });
+      this.onShare();
 
-      // attach to email and send
-      // MailComposer.composeAsync({ 
-      //   recipients: [ 'dixontk@gmail.com' ],
-      //   subject: `Expense report: ${moment(this.state.dateFrom).format('MMMM D, YYYY')} - ${moment(this.state.dateTo).format('MMMM D, YYYY')}`,
-      //   body: '',
-      //   // attachments: []
-      // });
-      // alert('Report has been emailed');
-
-    });
+    // });
   }
 
   generateReport = (arr) => {
@@ -130,9 +136,39 @@ export default class ReportsScreen extends React.Component {
     //     // Alert.alert("exportFile success", "Exported to " + file);
     // }).catch((err) => { console.log("exportFile Error", "Error " + err.message); });
 
-    XLSX.writeFile(wb, 'test.xlsx');
+    // XLSX.writeFile(wb, 'test.xlsx');
+    return XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 
   }
+
+  // writeReport = (report) => {
+  //   FileSystem.writeAsStringAsync(`${FileSystem.documentDirectory}/test.xlsx`, report);
+  // }
+
+
+  onShare = async () => {
+    try {
+      const result = await Share.share({
+        // message: 'React Native | A framework for building native apps using React',
+        url: this.state.filename
+      });
+
+      this.setState({ showingModal: false });
+
+      // if (result.action === Share.sharedAction) {
+      //   if (result.activityType) {
+      //     // shared with activity type of result.activityType
+      //   } else {
+      //     // shared
+      //   }
+      // } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      // }
+    } catch (error) {
+      // alert(error.message);
+      this.setState({ showingModal: false });
+    }
+  };
 
   render() {
     return (
@@ -163,7 +199,7 @@ export default class ReportsScreen extends React.Component {
         <Modal
           animationType="fade"
           transparent={true}
-          visible={this.state.loading}
+          visible={this.state.showingModal}
           >
           <View
             style={[
@@ -174,11 +210,13 @@ export default class ReportsScreen extends React.Component {
                 justifyContent: 'center',
               },
             ]}>
-            <ActivityIndicator color="#fff" animating size="large" />
+            {this.state.loading && <ActivityIndicator color="#fff" animating size="large" />}
+
+            {/*!this.state.loading && <Button title="Share" onPress={this.onShare} />*/}
+            {/*<Button title="Close" onPress={() => {this.setState({ showingModal: false })} } />*/}
+
           </View>
         </Modal>
-
-
       </View>
     );
   }
