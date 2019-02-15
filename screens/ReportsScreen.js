@@ -60,9 +60,9 @@ export default class ReportsScreen extends React.Component {
       // let filename = `${FileSystem.documentDirectory}/Expenses ${moment(this.state.dateFrom).format('MMM YY')} - ${moment(this.state.dateTo).format('MMM YY')}.xlsx`;
 
       // await FileSystem.writeAsStringAsync(filename, report);
-      await FileSystem.writeAsStringAsync(filename, report, { encoding: 'FileSystem.EncodingTypes.Base64' });
+      await FileSystem.writeAsStringAsync(filename, report, { encoding: FileSystem.EncodingTypes.Base64 });
       
-      console.log(report);
+      // console.log(report);
 
 
       this.setState({ loading: false, filename });

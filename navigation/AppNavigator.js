@@ -27,11 +27,12 @@ HomeStack.navigationOptions = {
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={
-        Platform.OS === 'ios'
-          ? `ios-information-circle${focused ? '' : '-outline'}`
-          : 'md-information-circle'
-      }
+      // name={
+      //   Platform.OS === 'ios'
+      //     ? `ios-information-circle${focused ? '' : '-outline'}`
+      //     : 'md-information-circle'
+      // }
+      name='ios-paper'
     />
   ),
 };
@@ -45,14 +46,15 @@ ReportsStack.navigationOptions = {
   tabBarIcon: ({ focused }) => (
     <TabBarIcon
       focused={focused}
-      name={Platform.OS === 'ios' ? `ios-link${focused ? '' : '-outline'}` : 'md-link'}
+      // name={Platform.OS === 'ios' ? 'ios-link' : 'md-link'}
+      name='ios-archive'
     />
   ),
 };
 
 const TabNavigator = createBottomTabNavigator({
-  ReportsStack,
   HomeStack,
+  ReportsStack,
 });
 
 const RootStack = createStackNavigator({
