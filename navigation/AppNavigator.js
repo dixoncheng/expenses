@@ -2,12 +2,14 @@ import React from 'react';
 import { createStackNavigator, createBottomTabNavigator, createAppContainer } from 'react-navigation';
 import { Platform } from 'react-native';
 
+import { YellowBox } from 'react-native';
+import _ from 'lodash';
+
 import TabBarIcon from '../components/TabBarIcon';
 
 import HomeScreen from '../screens/HomeScreen';
 import ExpenseScreen from '../screens/ExpenseScreen';
 import SelectCategoryScreen from '../screens/SelectCategoryScreen';
-// import CameraRollScreen from '../screens/CameraRollScreen';
 
 import ReportsScreen from '../screens/ReportsScreen';
 
@@ -65,5 +67,12 @@ const RootStack = createStackNavigator({
   mode: 'modal'
 });
 
+YellowBox.ignoreWarnings(['Setting a timer']);
+const _console = _.clone(console);
+console.warn = message => {
+  if (message.indexOf('Setting a timer') <= -1) {
+    _console.warn(message);
+  }
+};
 
 export default createAppContainer(RootStack);

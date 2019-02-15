@@ -27,7 +27,7 @@ export default class HomeScreen extends React.Component {
     //   this.setState({ items: arr });
     // });
 
-    firebase.database().ref('/').on('value', (snapshot) => {
+    firebase.database().ref('/').limitToLast(20).on('value', (snapshot) => {
       let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} }).reverse();
       // console.log(arr);
       this.setState({ items: arr });
@@ -84,10 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-
   item: {
     padding: 10,
-    
   },
-
 });

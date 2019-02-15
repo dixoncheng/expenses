@@ -193,6 +193,7 @@ export default class ReportsScreen extends React.Component {
           animationType="fade"
           transparent={true}
           visible={this.state.showingModal}
+          onRequestClose={() => {}}
           >
           <View
             style={[

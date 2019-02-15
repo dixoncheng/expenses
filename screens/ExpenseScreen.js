@@ -272,12 +272,12 @@ export default class AddExpense extends React.Component {
               onPress={this.retakePhoto} />
           </ImageBackground>
         }
-
         
         <Modal
           animationType="fade"
           transparent={true}
           visible={this.state.loading}
+          onRequestClose={() => {}}
           >
           <View
             style={[
