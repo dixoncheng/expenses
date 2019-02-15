@@ -44,31 +44,29 @@ export default class ReportsScreen extends React.Component {
     this.setState({ showingModal: true, loading: true });
 
     // retrieve all expenses for the chosen dates
-    let snapshot = await firebase.database().ref('/').once('value'); //.then((snapshot) => {
+    // let snapshot = await firebase.database().ref('/').once('value');
+    let snapshot = await firebase.database().ref('/').orderByChild('date').startAt(this.state.dateFrom.getTime()).endAt(this.state.dateTo.getTime()).once('value');
 
+    if(snapshot) {
       let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
       // console.log(arr);
-      // this.setState({ items: arr });
+      // this.setState({ showingModal: false, loading: false });
+      // return;
 
       // generate csv
       let report = this.generateReport(arr);
-
-      // const fileString = await FileSystem.readAsStringAsync(uri)
-
-      // console.log(report);
       let filename = `${FileSystem.documentDirectory}Expenses-${moment(this.state.dateFrom).format('MMM-YY')}-${moment(this.state.dateTo).format('MMM-YY')}.xlsx`;
       // let filename = `${FileSystem.documentDirectory}/Expenses ${moment(this.state.dateFrom).format('MMM YY')} - ${moment(this.state.dateTo).format('MMM YY')}.xlsx`;
-
-      // await FileSystem.writeAsStringAsync(filename, report);
+     
       await FileSystem.writeAsStringAsync(filename, report, { encoding: FileSystem.EncodingTypes.Base64 });
-      
-      // console.log(report);
-
 
       this.setState({ loading: false, filename });
       this.onShare();
-
-    // });
+    } else {
+      this.setState({ showingModal: false, loading: false });
+      alert('No records found');
+    }
+    
   }
 
   generateReport = (arr) => {
@@ -140,11 +138,6 @@ export default class ReportsScreen extends React.Component {
     return XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 
   }
-
-  // writeReport = (report) => {
-  //   FileSystem.writeAsStringAsync(`${FileSystem.documentDirectory}/test.xlsx`, report);
-  // }
-
 
   onShare = async () => {
     try {
