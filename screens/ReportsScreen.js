@@ -197,15 +197,11 @@ export default class ReportsScreen extends React.Component {
       const {action, year, month, day} = await DatePickerAndroid.open({
         // Use `new Date()` for current date.
         // May 25 2020. Month 0 is January.
-        date: new Date()
+        date: which === 'from' ? this.state.dateFrom : this.state.dateTo 
       });
       if (action !== DatePickerAndroid.dismissedAction) {
         // Selected year, month (0-11), day
-        if(which === 'from') {
-          this.setDateFrom(new Date(year, month, day))  
-        } else {
-          this.setDateTo(new Date(year, month, day))  
-        }
+        which === 'from' ? this.setDateFrom(new Date(year, month, day)) : this.setDateTo(new Date(year, month, day));
       }
     } catch ({code, message}) {
       console.warn('Cannot open date picker', message);

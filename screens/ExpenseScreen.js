@@ -1,5 +1,6 @@
 import React from 'react';
 import { 
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,12 +13,14 @@ import {
   ImageBackground,
   SafeAreaView,
   ActivityIndicator,
-  Modal
+  Modal,
+  DatePickerAndroid
 } from 'react-native';
 
 import { Camera, Permissions, ImagePicker } from 'expo';
 import * as firebase from 'firebase';
 import uuid from 'uuid';
+import moment from 'moment';
 
 import Categories from '../constants/Categories';
 
@@ -171,6 +174,22 @@ export default class AddExpense extends React.Component {
     }
   };
 
+  selectDateAndroid = async () => {
+    try {
+      const {action, year, month, day} = await DatePickerAndroid.open({
+        // Use `new Date()` for current date.
+        // May 25 2020. Month 0 is January.
+        date: this.state.date
+      });
+      if (action !== DatePickerAndroid.dismissedAction) {
+        // Selected year, month (0-11), day
+        this.setDate(new Date(year, month, day))
+      }
+    } catch ({code, message}) {
+      console.warn('Cannot open date picker', message);
+    }
+  }
+
 
   render() {
     return (
@@ -221,6 +240,7 @@ export default class AddExpense extends React.Component {
           />
         </View>
 
+        {Platform.OS === 'ios' &&
         <DatePickerIOS
           date={this.state.date}
           onDateChange={this.setDate}
@@ -230,6 +250,20 @@ export default class AddExpense extends React.Component {
             borderBottomColor: 'lightgrey' 
           }}
         />
+        }
+
+        {Platform.OS !== 'ios' &&
+        <TouchableHighlight
+          onPress={() => this.selectDateAndroid('from')}
+          underlayColor="lightgrey"
+          >
+          <View style={styles.row}>
+            <Text style={styles.label}>Date</Text>
+            <Text style={styles.label}>{moment(this.state.date).format('D-MMM-YY')}</Text>
+          </View>
+        </TouchableHighlight>
+        }
+
 
         {this.state.hasCameraPermission === null || this.state.hasCameraPermission === false && <View />}
 
