@@ -7,7 +7,8 @@ import {
   Text,
   TouchableOpacity,
   TouchableHighlight,
-  View
+  View,
+  Alert
 } from 'react-native';
 
 import * as firebase from 'firebase';
@@ -58,6 +59,21 @@ export default class HomeScreen extends React.Component {
     this.props.navigation.navigate('Expense', { item });
   }
 
+  onItemLongPress = (item) => {
+    Alert.alert(
+      'Delete this item?',
+      `${item.category} $${parseFloat(item.amount || 0).toFixed(2)}`,
+      [
+        {text: 'Yes', onPress: () => this.deleteItem(item) },
+        {text: 'No', onPress: () => {}, style: 'cancel'},
+      ]
+    );
+  }
+
+  deleteItem = (item) => {
+    firebase.database().ref(item.key).remove();
+  }
+
   render() {
 
     return (
@@ -65,7 +81,10 @@ export default class HomeScreen extends React.Component {
         <FlatList
           data={this.state.items}
           renderItem={
-            ({item}) => <TouchableOpacity style={styles.item} onPress={() => this.onItemPress(item)}>
+            ({item}) => <TouchableOpacity 
+              style={styles.item} 
+              onPress={() => this.onItemPress(item)}
+              onLongPress={() => this.onItemLongPress(item)}>
               <Text>{item.category}</Text>
               <Text>${parseFloat(item.amount || 0).toFixed(2)}</Text>
               <Text>{moment(item.date).format('MMMM D, YYYY')}</Text>
