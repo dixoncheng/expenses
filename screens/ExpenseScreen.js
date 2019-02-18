@@ -323,12 +323,27 @@ export default class AddExpense extends React.Component {
         </Camera>
         }
 
+{/*}
+<Image style={{
+              flex: 1,
+              width: '100%',
+              justifyContent: 'flex-end',
+              // width: 66, height: 58,
+              // backgroundColor: 'red'
+            }}
+            // source={ { uri: 'https://facebook.github.io/react-native/docs/assets/favicon.png' }} />*/}
         {this.state.photo && 
-          <ImageBackground source={this.state.photo.uri ? this.state.photo: { url: this.state.photo }} style={{
-            flex: 1, 
-            width: '100%',
-            justifyContent: 'flex-end'
-          }}>
+          <ImageBackground 
+            source={this.state.photo.uri ? this.state.photo : { uri: this.state.photo }} 
+            // source={ { uri: 'https://firebasestorage.googleapis.com/v0/b/expenses-7fdf1.appspot.com/o/5b13222c-f95d-4fc6-9d57-b7670518289d?alt=media&token=ed033205-2a74-4dcd-ab51-7595cca7c26b' }}
+            // source={ require('../assets/images/icon.png') }
+            // defaultSource={require('../assets/images/icon.png')}
+            // loadingIndicatorSource={require('../assets/images/icon.png')}
+            style={{
+              flex: 1,
+              width: '100%',
+              justifyContent: 'flex-end'
+            }}>
             <Button
               title="Retake photo" 
               onPress={this.retakePhoto} />
