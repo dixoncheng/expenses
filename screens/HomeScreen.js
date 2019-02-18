@@ -28,10 +28,14 @@ export default class HomeScreen extends React.Component {
     //   this.setState({ items: arr });
     // });
 
-    firebase.database().ref('/').limitToLast(20).on('value', (snapshot) => {
-      let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} }).reverse();
-      // console.log(arr);
-      this.setState({ items: arr });
+    firebase.database().ref('/').orderByChild('date').limitToLast(20).on('value', (snapshot) => {
+      // console.log(snapshot);
+
+      let arr = [];
+      snapshot.forEach(function(item) {
+        arr.push({ key: item.key, ...item.val() });
+      });
+      this.setState({ items: arr.reverse() });
     });
   }
 

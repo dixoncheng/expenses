@@ -60,7 +60,13 @@ export default class ReportsScreen extends React.Component {
     let snapshot = await firebase.database().ref('/').orderByChild('date').startAt(this.state.dateFrom.getTime()).endAt(this.state.dateTo.getTime()).once('value');
 
     if(snapshot.val()) {
-      let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
+      // let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
+
+      let arr = [];
+      snapshot.forEach(function(item) {
+        arr.push({ key: item.key, ...item.val() });
+      });
+      
       // console.log(arr);
       // this.setState({ showingModal: false, loading: false });
       // return;
