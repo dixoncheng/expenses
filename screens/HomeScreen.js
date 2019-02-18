@@ -72,6 +72,10 @@ export default class HomeScreen extends React.Component {
 
   deleteItem = (item) => {
     firebase.database().ref(item.key).remove();
+    // delete linked image
+    if(item.photoRef) {
+      firebase.storage().ref().child(item.photoRef).delete();
+    }
   }
 
   render() {

@@ -33,7 +33,9 @@ export default class AddExpense extends React.Component {
     photo: null,
     notes: null,
     hasCameraPermission: null,
-    loading: false
+    loading: false,
+    photoRef: null,
+    photoUpdated: false
   };
 
   async componentDidMount() {
@@ -74,34 +76,59 @@ export default class AddExpense extends React.Component {
   }
 
   save = async () => {
-    // show loading spinner
-    this.setState({ loading: true });
+    try {
+
+      // show loading spinner
+      this.setState({ loading: true });
+      
+      // upload photo
+      let photoUrl = '';
+      let photoRef = '';
+      // if(this.state.photo && this.state.photo.uri) {
+      //   photoRef = await this.uploadImageAsync(this.state.photo.uri);
+      //   photoUrl = await photoRef.getDownloadURL();
+      // } else if(this.state.photo && !this.state.photo.uri) {
+      //   photoUrl = this.state.photo;
+      // }
+      if(this.state.photoUpdated) {
+        photoRef = await this.uploadImageAsync(this.state.photo.uri);
+        photoUrl = await photoRef.getDownloadURL();
+      } else {
+        photoUrl = this.state.photo;
+      }
+
+      // delete existing linked image if available
+      if(this.state.photoUpdated && this.state.photoRef) {
+        firebase.storage().ref().child(this.state.photoRef).delete();
+      }
+
+      // save to db
+      await firebase.database().ref(this.state.key || new Date().getTime()).set({
+        date: this.state.date.getTime(),
+        amount: this.state.amount,
+        category: this.state.category,
+        notes: this.state.notes,
+        photo: photoUrl || '',
+        photoRef: photoRef.fullPath || ''
+      });
+      
+      
+
+
+
+      // back to list
+      this.setState({ loading: false });
+      
+      if(this.state.key) {
+        this.props.navigation.navigate('Home');
+      } else {
+        this.props.navigation.navigate('TabNavigator');
+      }
     
-    // upload photo
-    let photoUrl = '';
-    if(this.state.photo.uri) {
-      photoUrl = await this.uploadImageAsync(this.state.photo.uri);
-    } else if(this.state.photo && !this.state.photo.uri) {
-      photoUrl = this.state.photo;
+    } catch ({code, message}) {
+      this.setState({ loading: false });
     }
-    
-    // save to db
-    await firebase.database().ref(this.state.key || new Date().getTime()).set({
-      date: this.state.date.getTime(),
-      amount: this.state.amount,
-      category: this.state.category,
-      notes: this.state.notes,
-      photo: photoUrl || ''
-    });
-    
-    // back to list
-    this.setState({ loading: false });
-    
-    if(this.state.key) {
-      this.props.navigation.navigate('Home');
-    } else {
-      this.props.navigation.navigate('TabNavigator');
-    }
+
   }
 
   uploadImageAsync = async (uri) => {
@@ -130,7 +157,8 @@ export default class AddExpense extends React.Component {
     // We're done with the blob, close and release it
     blob.close();
 
-    return await snapshot.ref.getDownloadURL();
+    // return await snapshot.ref.getDownloadURL();
+    return await snapshot.ref;
   }
 
 
@@ -149,7 +177,7 @@ export default class AddExpense extends React.Component {
   takePhoto = async () => {
     if (this.camera) {
       let photo = await this.camera.takePictureAsync();
-      this.setState({photo});
+      this.setState({ photoUpdated: true, photo });
     }
   }
 
@@ -170,7 +198,7 @@ export default class AddExpense extends React.Component {
     // console.log(result);
 
     if (!result.cancelled) {
-      this.setState({ photo: result });
+      this.setState({ photoUpdated: true, photo: result });
     }
   };
 
