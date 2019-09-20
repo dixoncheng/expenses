@@ -1,15 +1,37 @@
 import React from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { Platform, StatusBar, StyleSheet, View, AsyncStorage } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
 import AppNavigator from './navigation/AppNavigator';
 import * as firebase from 'firebase';
 import firebaseConfig from './constants/Firebase';
+import LoginScreen from './screens/LoginScreen';
 
 export default class App extends React.Component {
 
   state = {
     isLoadingComplete: false,
   };
+
+  componentDidMount() {
+    this._retrieveData();
+  }
+
+  _retrieveData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('expensesLoggedIn');
+      if (value !== null) {
+        // We have data!!
+        // console.log(value);
+        this.setState({ loggedIn: true });
+      }
+    } catch (error) {
+      // Error retrieving data
+    }
+  };
+
+  login = () => {
+    this.setState({ 'loggedIn': true });
+  }
 
   render() {
     if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
@@ -24,7 +46,7 @@ export default class App extends React.Component {
       return (
         <View style={styles.container}>
           {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-          <AppNavigator />
+          {this.state.loggedIn ? <AppNavigator /> : <LoginScreen login={this.login} />}
         </View>
       );
     }
