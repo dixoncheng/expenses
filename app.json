@@ -24,7 +24,11 @@
       "**/*"
     ],
     "ios": {
+      "bundleIdentifier": "com.macaroni.expenses",
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.macaroni.expenses"
     }
   }
 }

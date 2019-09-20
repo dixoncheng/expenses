@@ -8,13 +8,15 @@ import {
   View,
   TextInput,
   TouchableHighlight,
+  TouchableWithoutFeedback,
   DatePickerIOS,
   TouchableOpacity,
   ImageBackground,
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  DatePickerAndroid
+  DatePickerAndroid,
+  Keyboard
 } from 'react-native';
 
 import { Camera, Permissions, ImagePicker } from 'expo';
@@ -176,7 +178,14 @@ export default class AddExpense extends React.Component {
 
   takePhoto = async () => {
     if (this.camera) {
-      let photo = await this.camera.takePictureAsync();
+
+      // let ratios = await this.camera.getSupportedRatiosAsync();
+      // console.log(ratios);
+
+      // let sizes = await this.camera.getAvailablePictureSizesAsync('4:3');
+      // console.log(sizes);
+
+      let photo = await this.camera.takePictureAsync({ quality: Platform.OS === 'ios' ? 0.3 : 0.5 });
       this.setState({ photoUpdated: true, photo });
     }
   }
@@ -292,11 +301,20 @@ export default class AddExpense extends React.Component {
         </TouchableHighlight>
         }
 
-
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View
+            style={{
+              flex: 1,
+              backgroundColor: 'transparent',
+              justifyContent: 'flex-end',
+            }}>
         {this.state.hasCameraPermission === null || this.state.hasCameraPermission === false && <View />}
 
         {this.state.hasCameraPermission === true && !this.state.photo && 
-        <Camera ref={ref => { this.camera = ref; }} style={{ flex: 1 }} type="back">
+        <Camera 
+          ref={ref => { this.camera = ref; }} 
+          style={{ flex: 1 }} type="back" 
+          pictureSize={ Platform.OS === 'ios' ? '1920x1080' : '1600x1200' }>
           <View
             style={{
               flex: 1,
@@ -323,22 +341,9 @@ export default class AddExpense extends React.Component {
         </Camera>
         }
 
-{/*}
-<Image style={{
-              flex: 1,
-              width: '100%',
-              justifyContent: 'flex-end',
-              // width: 66, height: 58,
-              // backgroundColor: 'red'
-            }}
-            // source={ { uri: 'https://facebook.github.io/react-native/docs/assets/favicon.png' }} />*/}
-        {this.state.photo && 
+        {this.state.photo ?
           <ImageBackground 
-            source={this.state.photo.uri ? this.state.photo : { uri: this.state.photo }} 
-            // source={ { uri: 'https://firebasestorage.googleapis.com/v0/b/expenses-7fdf1.appspot.com/o/5b13222c-f95d-4fc6-9d57-b7670518289d?alt=media&token=ed033205-2a74-4dcd-ab51-7595cca7c26b' }}
-            // source={ require('../assets/images/icon.png') }
-            // defaultSource={require('../assets/images/icon.png')}
-            // loadingIndicatorSource={require('../assets/images/icon.png')}
+            source={this.state.photo.uri ? this.state.photo : { uri: this.state.photo }}
             style={{
               flex: 1,
               width: '100%',
@@ -347,9 +352,11 @@ export default class AddExpense extends React.Component {
             <Button
               title="Retake photo" 
               onPress={this.retakePhoto} />
-          </ImageBackground>
+          </ImageBackground> : null
         }
-        
+        </View>
+        </TouchableWithoutFeedback>
+
         <Modal
           animationType="fade"
           transparent={true}
