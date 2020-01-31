@@ -9,17 +9,21 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "expo": "^32.0.0",
+    "expo": "^35.0.0",
+    "expo-camera": "~7.0.0",
+    "expo-file-system": "~7.0.0",
+    "expo-image-picker": "~7.0.0",
+    "expo-mail-composer": "~7.0.0",
     "firebase": "^5.8.2",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "react": "16.5.0",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-32.0.0.tar.gz",
+    "react": "16.8.3",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
     "react-navigation": "^3.1.2",
     "uuid": "^3.3.2",
     "xlsx": "^0.14.1"
   },
   "devDependencies": {
-    "babel-preset-expo": "^5.0.0"
+    "babel-preset-expo": "^7.0.0"
   }
 }

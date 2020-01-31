@@ -19,7 +19,10 @@ import {
   Keyboard
 } from 'react-native';
 
-import { Camera, Permissions, ImagePicker } from 'expo';
+import * as Permissions from 'expo-permissions';
+import { Camera } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+
 import * as firebase from 'firebase';
 import uuid from 'uuid';
 import moment from 'moment';

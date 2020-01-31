@@ -14,7 +14,8 @@ import {
   Alert
 } from 'react-native';
 
-import { FileSystem, MailComposer } from 'expo';
+import * as FileSystem from 'expo-file-system';
+import * as MailComposer from 'expo-mail-composer';
 
 import * as firebase from 'firebase';
 import moment from 'moment';
@@ -76,11 +77,11 @@ export default class ReportsScreen extends React.Component {
       let filename = `${FileSystem.documentDirectory}Expenses-${moment(this.state.dateFrom).format('MMM-YY')}-${moment(this.state.dateTo).format('MMM-YY')}.xlsx`;
       // let filename = `${FileSystem.documentDirectory}/Expenses ${moment(this.state.dateFrom).format('MMM YY')} - ${moment(this.state.dateTo).format('MMM YY')}.xlsx`;
      
-      await FileSystem.writeAsStringAsync(filename, report, { encoding: FileSystem.EncodingTypes.Base64 });
+      await FileSystem.writeAsStringAsync(filename, report, { encoding: FileSystem.EncodingType.Base64 });
 
       this.setState({ loading: false, filename });
       
-      if(Platform.OS === 'ios') {
+      if(Platform.OS === 'ios1') {
         this.onShare();
 
       } else {
@@ -149,7 +150,7 @@ export default class ReportsScreen extends React.Component {
     let row = {};
     for (let i = 0; i < Categories.length; i++) {
       row[Categories[i]] = {
-        f: `=SUM(${XLSX.utils.encode_cell({ r:1, c:i })}:${XLSX.utils.encode_cell({ r:data.length, c:i })})`,
+        f: `SUM(${XLSX.utils.encode_cell({ r:1, c:i })}:${XLSX.utils.encode_cell({ r:data.length, c:i })})`,
         z: fmt,
         t: 'n'
       }

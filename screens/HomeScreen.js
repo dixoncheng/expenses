@@ -16,20 +16,38 @@ import moment from 'moment';
 
 export default class HomeScreen extends React.Component {
   state = {
-    items: []
+    items: [],
+    page: 1,
+    loadingMore: false
   }
+
+  static navigationOptions = ({ navigation }) => {
+    const { params = {} } = navigation.state;
+    return {
+      headerTitle: 'Expenses1',
+      headerRight: (
+        <Button
+          onPress={() => params.addExpense()}
+          title="Add"
+        />
+      ),
+    }
+  };
 
   componentDidMount() {
     this.props.navigation.setParams({ addExpense: () => this._addExpense(true) });
-    
-    // firebase.database().ref('/').once('value').then((snapshot) => {
-    //   let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
-    //   // console.log(arr);
-    //   this.setState({ items: arr });
-    // });
+    this._fetchData();
+  }
 
+  _fetchData = () => {
     firebase.database().ref('/').orderByChild('date').limitToLast(20).on('value', (snapshot) => {
-      // console.log(snapshot);
+    // firebase.database().ref('/').orderByChild('date').limitToLast(20).startAt('1568454153000').on('value', (snapshot) => {
+      
+
+      console.log(snapshot);
+
+      // var lastVisible = snapshot.docs[snapshot.docs.length-1];
+      // console.log("last", lastVisible);
 
       let arr = [];
       snapshot.forEach(function(item) {
@@ -42,21 +60,6 @@ export default class HomeScreen extends React.Component {
   _addExpense(visible) {
     this.props.navigation.navigate('AddExpense');
   }
-
-  static navigationOptions = ({ navigation }) => {
-
-    const { params = {} } = navigation.state;
-
-    return {
-      headerTitle: 'Expenses',
-      headerRight: (
-        <Button
-          onPress={() => params.addExpense()}
-          title="Add"
-        />
-      ),
-    }
-  };
 
   onItemPress = (item) => {
     // console.log(item);
@@ -82,6 +85,19 @@ export default class HomeScreen extends React.Component {
     }
   }
 
+  _handleLoadMore = () => {
+    console.log(1);
+    // this.setState(
+    //   (prevState, nextProps) => ({
+    //     page: prevState.page + 1,
+    //     loadingMore: true
+    //   }),
+    //   () => {
+    //     this._fetchData();
+    //   }
+    // );
+  };
+
   render() {
 
     return (
@@ -100,6 +116,9 @@ export default class HomeScreen extends React.Component {
           ItemSeparatorComponent={() => (<View style={{ borderBottomWidth: 1, borderBottomColor: 'lightgrey' }} />)}
           keyExtractor={(item, index) => index.toString()}
           extraData={this.state}
+          onEndReached={this._handleLoadMore}
+          onEndReachedThreshold={0.5}
+          initialNumToRender={10}
         />
       </View>
     );
