@@ -94,7 +94,7 @@ export default class HomeScreen extends React.Component {
   };
 
   _handleLoadMore = () => {
-    console.log(1);
+    // console.log("_handleLoadMore");
     // this.setState(
     //   (prevState, nextProps) => ({
     //     page: prevState.page + 1,
