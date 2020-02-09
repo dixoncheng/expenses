@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   Button,
@@ -24,7 +23,7 @@ import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
 import * as firebase from "firebase";
-import uuid from "uuid";
+// import uuid from "uuid";
 import moment from "moment";
 
 import Categories from "../constants/Categories";
@@ -34,8 +33,15 @@ import Categories from "../constants/Categories";
 const {
   createClient
 } = require("contentful-management/dist/contentful-management.browser.min.js");
-const spaceId = "2py99kpzwf1f";
-const accessToken = "CFPAT-bE9_7CUwF3cfHG7mIW_yWGigSsj4UF3qaLt-eJ_nqLk";
+// const spaceId = "2py99kpzwf1f";
+// const accessToken = "CFPAT-bE9_7CUwF3cfHG7mIW_yWGigSsj4UF3qaLt-eJ_nqLk";
+
+import {
+  CONTENTFUL_MANAGEMENT_TOKEN,
+  CONTENTFUL_SPACE_ID,
+  CONTENTFUL_CONTENT_TYPE,
+  CONTENTFUL_ENVIRONMENT
+} from "react-native-dotenv";
 
 export default class AddExpense extends React.Component {
   state = {
@@ -54,7 +60,6 @@ export default class AddExpense extends React.Component {
   async componentDidMount() {
     let item = this.props.navigation.getParam("item");
     if (item) {
-      item.date = new Date(item.date);
       this.setState(item);
     }
 
@@ -100,12 +105,6 @@ export default class AddExpense extends React.Component {
       // upload photo
       let photoUrl = "";
       let photoRef = "";
-      // if(this.state.photo && this.state.photo.uri) {
-      //   photoRef = await this.uploadImageAsync(this.state.photo.uri);
-      //   photoUrl = await photoRef.getDownloadURL();
-      // } else if(this.state.photo && !this.state.photo.uri) {
-      //   photoUrl = this.state.photo;
-      // }
       if (this.state.photoUpdated) {
         photoRef = await this.uploadImageAsync(this.state.photo.uri);
         photoUrl = await photoRef.getDownloadURL();
@@ -115,25 +114,59 @@ export default class AddExpense extends React.Component {
 
       // delete existing linked image if available
       if (this.state.photoUpdated && this.state.photoRef) {
-        firebase
-          .storage()
-          .ref()
-          .child(this.state.photoRef)
-          .delete();
+        // firebase
+        //   .storage()
+        //   .ref()
+        //   .child(this.state.photoRef)
+        //   .delete();
       }
 
       // save to db
-      await firebase
-        .database()
-        .ref(this.state.key || new Date().getTime())
-        .set({
-          date: this.state.date.getTime(),
-          amount: this.state.amount,
-          category: this.state.category,
-          notes: this.state.notes,
-          photo: photoUrl || "",
-          photoRef: photoRef.fullPath || ""
-        });
+      // await firebase
+      //   .database()
+      //   .ref(this.state.key || new Date().getTime())
+      //   .set({
+      //     date: this.state.date.getTime(),
+      //     amount: this.state.amount,
+      //     category: this.state.category,
+      //     notes: this.state.notes,
+      //     photo: photoUrl || "",
+      //     photoRef: photoRef.fullPath || ""
+      //   });
+      const client = createClient({
+        accessToken: CONTENTFUL_MANAGEMENT_TOKEN
+      });
+
+      client
+        .getSpace(CONTENTFUL_SPACE_ID)
+        .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+        .then(environment =>
+          environment.createEntryWithId(
+            CONTENTFUL_CONTENT_TYPE,
+            this.state.id,
+            {
+              fields: {
+                amount: {
+                  "en-US": this.state.amount
+                }
+              }
+            }
+          )
+        )
+
+        .then(asset => {
+          console.log("prcessing...");
+          return asset.processForLocale("en-US", {
+            processingCheckWait: 2000
+          });
+        })
+        .then(asset => {
+          console.log("publishing...");
+          return asset.publish();
+        })
+
+        .then(asset => console.log(asset))
+        .catch(console.error);
 
       // back to list
       this.setState({ loading: false });
@@ -198,8 +231,7 @@ export default class AddExpense extends React.Component {
     let contentType = `images/${fileType}`;
     // console.log(2);
     const client = createClient({
-      accessToken
-      // space: spaceId
+      accessToken: CONTENTFUL_MANAGEMENT_TOKEN
     });
 
     // console.log(client);
@@ -291,10 +323,10 @@ export default class AddExpense extends React.Component {
     //   xhr.open("GET", uri, true);
     //   xhr.send(null);
     // });
-    var RNFS = require("react-native-fs");
+    // var RNFS = require("react-native-fs");
 
-    const file = RNFS.readFile(uri);
-    console.log(file);
+    // const file = RNFS.readFile(uri);
+    // console.log(file);
 
     // const blob = await RNFetchBlob.fs.readStream(
     //   // file path
@@ -309,8 +341,8 @@ export default class AddExpense extends React.Component {
     console.log(blob);
 
     client
-      .getSpace(spaceId)
-      .then(space => space.getEnvironment("master"))
+      .getSpace(CONTENTFUL_SPACE_ID)
+      .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
       .then(environment =>
         environment.createAssetFromFiles({
           fields: {
@@ -321,7 +353,8 @@ export default class AddExpense extends React.Component {
               "en-US": {
                 contentType,
                 fileName,
-                file: blob.stream()
+                // file: blob.stream()
+                file: "test"
               }
             }
           }

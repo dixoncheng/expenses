@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "expenses",
-    "description": "A very interesting project.",
-    "slug": "expenses1103335",
-    "privacy": "unlisted",
-    "sdkVersion": "35.0.0",
+    "name": "Tab Navigation Template",
+    "slug": "expo-new",
+    "privacy": "public",
+    "sdkVersion": "36.0.0",
     "platforms": [
       "ios",
-      "android"
+      "android",
+      "web"
     ],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,11 +24,7 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.macaroni.expenses",
       "supportsTablet": true
-    },
-    "android": {
-      "package": "com.macaroni.expenses"
     }
   }
 }

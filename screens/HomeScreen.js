@@ -2,17 +2,21 @@ import React from "react";
 import {
   FlatList,
   Button,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableHighlight,
   View,
   Alert
 } from "react-native";
 
-import * as firebase from "firebase";
 import moment from "moment";
+const { createClient } = require("contentful/dist/contentful.browser.min.js");
+
+import {
+  CONTENTFUL_DELIVERY_TOKEN,
+  CONTENTFUL_SPACE_ID,
+  CONTENTFUL_CONTENT_TYPE
+} from "react-native-dotenv";
 
 export default class HomeScreen extends React.Component {
   state = {
@@ -24,7 +28,7 @@ export default class HomeScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
     return {
-      headerTitle: "Expenses v0.1",
+      headerTitle: "Expenses v0.2",
       headerRight: <Button onPress={() => params.addExpense()} title="Add" />
     };
   };
@@ -37,24 +41,38 @@ export default class HomeScreen extends React.Component {
   }
 
   _fetchData = () => {
-    firebase
-      .database()
-      .ref("/")
-      .orderByChild("date")
-      .limitToLast(20)
-      .on("value", snapshot => {
-        // firebase.database().ref('/').orderByChild('date').limitToLast(20).startAt('1568454153000').on('value', (snapshot) => {
-
-        // console.log(snapshot);
-
-        // var lastVisible = snapshot.docs[snapshot.docs.length-1];
-        // console.log("last", lastVisible);
-
-        let arr = [];
-        snapshot.forEach(function(item) {
-          arr.push({ key: item.key, ...item.val() });
+    const client = createClient({
+      accessToken: CONTENTFUL_DELIVERY_TOKEN,
+      space: CONTENTFUL_SPACE_ID
+    });
+    client
+      .getEntries({ content_type: CONTENTFUL_CONTENT_TYPE })
+      .then(response => {
+        // console.log(response);
+        this.setState({
+          items: response.items.map(item => {
+            // item.fields.photo = item.fields.photo
+            //   ? `https:${item.fields.photo.fields.file.url}`
+            //   : null;
+            // item.fields.date = new Date(item.fields.date);
+            // item.fields.amount = item.fields.amount + "";
+            // return item.fields;
+            return {
+              id: item.sys.id,
+              photo:
+                item.fields.photo && item.fields.photo.fields.file
+                  ? `https:${item.fields.photo.fields.file.url}`
+                  : null,
+              date: new Date(item.fields.date),
+              amount: item.fields.amount + "",
+              category: item.fields.category,
+              notes: item.fields.notes
+            };
+          })
         });
-        this.setState({ items: arr.reverse() });
+      })
+      .catch(function(error) {
+        console.log(error);
       });
   };
 
@@ -79,18 +97,18 @@ export default class HomeScreen extends React.Component {
   };
 
   deleteItem = item => {
-    firebase
-      .database()
-      .ref(item.key)
-      .remove();
-    // delete linked image
-    if (item.photoRef) {
-      firebase
-        .storage()
-        .ref()
-        .child(item.photoRef)
-        .delete();
-    }
+    // firebase
+    //   .database()
+    //   .ref(item.key)
+    //   .remove();
+    // // delete linked image
+    // if (item.photoRef) {
+    //   firebase
+    //     .storage()
+    //     .ref()
+    //     .child(item.photoRef)
+    //     .delete();
+    // }
   };
 
   _handleLoadMore = () => {
