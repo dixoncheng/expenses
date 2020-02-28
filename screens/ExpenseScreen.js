@@ -8,15 +8,16 @@ import {
   TextInput,
   TouchableHighlight,
   TouchableWithoutFeedback,
-  DatePickerIOS,
+  // DatePickerIOS,
   TouchableOpacity,
   ImageBackground,
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  DatePickerAndroid,
+  // DatePickerAndroid,
   Keyboard
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import * as Permissions from "expo-permissions";
 import { Camera } from "expo-camera";
@@ -33,8 +34,6 @@ import Categories from "../constants/Categories";
 const {
   createClient
 } = require("contentful-management/dist/contentful-management.browser.min.js");
-// const spaceId = "2py99kpzwf1f";
-// const accessToken = "CFPAT-bE9_7CUwF3cfHG7mIW_yWGigSsj4UF3qaLt-eJ_nqLk";
 
 import {
   CONTENTFUL_MANAGEMENT_TOKEN,
@@ -45,7 +44,7 @@ import {
 
 export default class AddExpense extends React.Component {
   state = {
-    key: null,
+    id: null,
     date: new Date(),
     amount: null,
     category: Categories[0],
@@ -97,42 +96,26 @@ export default class AddExpense extends React.Component {
     };
   };
 
-  save = async () => {
+  save = () => {
     try {
       // show loading spinner
       this.setState({ loading: true });
 
-      // upload photo
-      let photoUrl = "";
-      let photoRef = "";
-      if (this.state.photoUpdated) {
-        photoRef = await this.uploadImageAsync(this.state.photo.uri);
-        photoUrl = await photoRef.getDownloadURL();
-      } else {
-        photoUrl = this.state.photo;
-      }
+      // TODO upload photo
+      // let photoUrl = "";
+      // let photoRef = "";
+      // if (this.state.photoUpdated) {
+      //   photoRef = await this.uploadImageAsync(this.state.photo.uri);
+      //   photoUrl = await photoRef.getDownloadURL();
+      // } else {
+      //   photoUrl = this.state.photo;
+      // }
 
-      // delete existing linked image if available
+      // TODO delete existing linked image if available
       if (this.state.photoUpdated && this.state.photoRef) {
-        // firebase
-        //   .storage()
-        //   .ref()
-        //   .child(this.state.photoRef)
-        //   .delete();
       }
 
       // save to db
-      // await firebase
-      //   .database()
-      //   .ref(this.state.key || new Date().getTime())
-      //   .set({
-      //     date: this.state.date.getTime(),
-      //     amount: this.state.amount,
-      //     category: this.state.category,
-      //     notes: this.state.notes,
-      //     photo: photoUrl || "",
-      //     photoRef: photoRef.fullPath || ""
-      //   });
       const client = createClient({
         accessToken: CONTENTFUL_MANAGEMENT_TOKEN
       });
@@ -140,43 +123,71 @@ export default class AddExpense extends React.Component {
       client
         .getSpace(CONTENTFUL_SPACE_ID)
         .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
-        .then(environment =>
-          environment.createEntryWithId(
-            CONTENTFUL_CONTENT_TYPE,
-            this.state.id,
-            {
+        .then(environment => {
+          if (this.state.id) {
+            // update
+            return environment.getEntry(this.state.id).then(entry => {
+              entry.fields.amount["en-US"] = parseFloat(this.state.amount);
+              entry.fields.date["en-US"] = this.state.date;
+              // TODO photo
+              entry.fields.category["en-US"] = this.state.category;
+              entry.fields.notes["en-US"] = this.state.notes;
+              return entry.update();
+            });
+          } else {
+            return environment.createEntry(CONTENTFUL_CONTENT_TYPE, {
               fields: {
                 amount: {
-                  "en-US": this.state.amount
+                  "en-US": parseFloat(this.state.amount)
+                },
+                date: {
+                  "en-US": this.state.date
+                },
+                // TODO photo
+                category: {
+                  "en-US": this.state.category
+                },
+                notes: {
+                  "en-US": this.state.notes
                 }
               }
-            }
-          )
-        )
-
-        .then(asset => {
-          console.log("prcessing...");
-          return asset.processForLocale("en-US", {
-            processingCheckWait: 2000
-          });
+            });
+          }
         })
-        .then(asset => {
-          console.log("publishing...");
-          return asset.publish();
+        .then(entry => {
+          console.log(entry);
+          return entry.publish();
         })
+        // TODO ASSETS
+        .then(() => {
+          // back to list
+          this.setState({ loading: false });
 
-        .then(asset => console.log(asset))
+          this.props.navigation.state.params.refresh();
+
+          if (this.state.id) {
+            // update
+            this.props.navigation.navigate("Home");
+          } else {
+            // create
+            this.props.navigation.navigate("TabNavigator");
+          }
+        })
+        // .then(asset => {
+        //   console.log("prcessing...");
+        //   return asset.processForLocale("en-US", {
+        //     processingCheckWait: 2000
+        //   });
+        // })
+        // .then(asset => {
+        //   console.log("publishing...");
+        //   return asset.publish();
+        // })
+
+        // .then(asset => console.log(asset))
         .catch(console.error);
-
-      // back to list
-      this.setState({ loading: false });
-
-      if (this.state.key) {
-        this.props.navigation.navigate("Home");
-      } else {
-        this.props.navigation.navigate("TabNavigator");
-      }
     } catch ({ code, message }) {
+      console.log("err");
       console.log(message);
       this.setState({ loading: false });
     }
@@ -386,7 +397,7 @@ export default class AddExpense extends React.Component {
     this.setState({ category: item });
   };
 
-  setDate = newDate => {
+  setDate = (event, newDate) => {
     this.setState({ date: newDate });
   };
 
@@ -426,21 +437,21 @@ export default class AddExpense extends React.Component {
     }
   };
 
-  selectDateAndroid = async () => {
-    try {
-      const { action, year, month, day } = await DatePickerAndroid.open({
-        // Use `new Date()` for current date.
-        // May 25 2020. Month 0 is January.
-        date: this.state.date
-      });
-      if (action !== DatePickerAndroid.dismissedAction) {
-        // Selected year, month (0-11), day
-        this.setDate(new Date(year, month, day));
-      }
-    } catch ({ code, message }) {
-      console.warn("Cannot open date picker", message);
-    }
-  };
+  // selectDateAndroid = async () => {
+  //   try {
+  //     const { action, year, month, day } = await DatePickerAndroid.open({
+  //       // Use `new Date()` for current date.
+  //       // May 25 2020. Month 0 is January.
+  //       date: this.state.date
+  //     });
+  //     if (action !== DatePickerAndroid.dismissedAction) {
+  //       // Selected year, month (0-11), day
+  //       this.setDate(new Date(year, month, day));
+  //     }
+  //   } catch ({ code, message }) {
+  //     console.warn("Cannot open date picker", message);
+  //   }
+  // };
 
   render() {
     return (
@@ -492,7 +503,17 @@ export default class AddExpense extends React.Component {
           />
         </View>
 
-        {Platform.OS === "ios" && (
+        <DateTimePicker
+          // testID="dateTimePicker"
+          // timeZoneOffsetInMinutes={0}
+          value={this.state.date}
+          // mode={mode}
+          is24Hour={true}
+          display="default"
+          onChange={this.setDate}
+        />
+
+        {/* {Platform.OS === "ios" && (
           <DatePickerIOS
             date={this.state.date}
             onDateChange={this.setDate}
@@ -502,9 +523,9 @@ export default class AddExpense extends React.Component {
               borderBottomColor: "lightgrey"
             }}
           />
-        )}
+        )} */}
 
-        {Platform.OS !== "ios" && (
+        {/* {Platform.OS !== "ios" && (
           <TouchableHighlight
             onPress={() => this.selectDateAndroid("from")}
             underlayColor="lightgrey"
@@ -516,7 +537,7 @@ export default class AddExpense extends React.Component {
               </Text>
             </View>
           </TouchableHighlight>
-        )}
+        )} */}
 
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View

@@ -41,6 +41,7 @@ export default class HomeScreen extends React.Component {
   }
 
   _fetchData = () => {
+    // console.log("fetch");
     const client = createClient({
       accessToken: CONTENTFUL_DELIVERY_TOKEN,
       space: CONTENTFUL_SPACE_ID
@@ -51,12 +52,6 @@ export default class HomeScreen extends React.Component {
         // console.log(response);
         this.setState({
           items: response.items.map(item => {
-            // item.fields.photo = item.fields.photo
-            //   ? `https:${item.fields.photo.fields.file.url}`
-            //   : null;
-            // item.fields.date = new Date(item.fields.date);
-            // item.fields.amount = item.fields.amount + "";
-            // return item.fields;
             return {
               id: item.sys.id,
               photo:
@@ -77,12 +72,15 @@ export default class HomeScreen extends React.Component {
   };
 
   _addExpense(visible) {
-    this.props.navigation.navigate("AddExpense");
+    this.props.navigation.navigate("AddExpense", { refresh: this._fetchData });
   }
 
   onItemPress = item => {
     // console.log(item);
-    this.props.navigation.navigate("Expense", { item });
+    this.props.navigation.navigate("Expense", {
+      item,
+      refresh: this._fetchData
+    });
   };
 
   onItemLongPress = item => {
@@ -136,7 +134,9 @@ export default class HomeScreen extends React.Component {
               onLongPress={() => this.onItemLongPress(item)}
             >
               <Text>{item.category}</Text>
-              <Text>${parseFloat(item.amount || 0).toFixed(2)}</Text>
+              <Text>
+                ${item.amount >= 0 ? parseFloat(item.amount).toFixed(2) : 0}
+              </Text>
               <Text>{moment(item.date).format("MMMM D, YYYY")}</Text>
             </TouchableOpacity>
           )}
@@ -145,10 +145,10 @@ export default class HomeScreen extends React.Component {
               style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey" }}
             />
           )}
-          keyExtractor={(item, index) => index.toString()}
-          extraData={this.state}
-          onEndReached={this._handleLoadMore}
-          onEndReachedThreshold={0.5}
+          // keyExtractor={(item, index) => index.toString()}
+          // extraData={this.state}
+          // onEndReached={this._handleLoadMore}
+          // onEndReachedThreshold={0.5}
           initialNumToRender={10}
         />
       </View>
