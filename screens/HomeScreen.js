@@ -49,9 +49,11 @@ export default class HomeScreen extends React.Component {
     client
       .getEntries({ content_type: CONTENTFUL_CONTENT_TYPE })
       .then(response => {
-        // console.log(response);
         this.setState({
           items: response.items.map(item => {
+            // if (item.fields.photo) {
+            //   console.log(item);
+            // }
             return {
               id: item.sys.id,
               photo:

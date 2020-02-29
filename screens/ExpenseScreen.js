@@ -8,13 +8,11 @@ import {
   TextInput,
   TouchableHighlight,
   TouchableWithoutFeedback,
-  // DatePickerIOS,
   TouchableOpacity,
   ImageBackground,
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  // DatePickerAndroid,
   Keyboard
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -22,11 +20,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Permissions from "expo-permissions";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-
-import * as firebase from "firebase";
-// import uuid from "uuid";
-import moment from "moment";
-
 import Categories from "../constants/Categories";
 
 // import RNFetchBlob from "rn-fetch-blob";
@@ -96,24 +89,21 @@ export default class AddExpense extends React.Component {
     };
   };
 
-  save = () => {
+  save = async () => {
     try {
       // show loading spinner
       this.setState({ loading: true });
 
       // TODO upload photo
-      // let photoUrl = "";
-      // let photoRef = "";
-      // if (this.state.photoUpdated) {
-      //   photoRef = await this.uploadImageAsync(this.state.photo.uri);
-      //   photoUrl = await photoRef.getDownloadURL();
-      // } else {
-      //   photoUrl = this.state.photo;
-      // }
+      let newPhoto = {};
+      if (this.state.photoUpdated) {
+        newPhoto = await this.uploadImageAsync(this.state.photo.uri);
+        console.log(newPhoto);
+      }
 
       // TODO delete existing linked image if available
-      if (this.state.photoUpdated && this.state.photoRef) {
-      }
+      // if (this.state.photoUpdated && this.state.photoRef) {
+      // }
 
       // save to db
       const client = createClient({
@@ -124,41 +114,43 @@ export default class AddExpense extends React.Component {
         .getSpace(CONTENTFUL_SPACE_ID)
         .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
         .then(environment => {
+          const fields = {
+            amount: { "en-US": parseFloat(this.state.amount) },
+            notes: { "en-US": this.state.notes },
+            date: { "en-US": this.state.date },
+            category: { "en-US": this.state.category }
+          };
+
+          if (this.state.photoUpdated) {
+            fields.photo = {
+              "en-US": {
+                sys: {
+                  id: newPhoto.sys.id,
+                  type: "Link",
+                  linkType: "Asset"
+                }
+              }
+            };
+          }
+
           if (this.state.id) {
             // update
             return environment.getEntry(this.state.id).then(entry => {
-              entry.fields.amount["en-US"] = parseFloat(this.state.amount);
-              entry.fields.date["en-US"] = this.state.date;
-              // TODO photo
-              entry.fields.category["en-US"] = this.state.category;
-              entry.fields.notes["en-US"] = this.state.notes;
+              entry.fields = { ...fields };
               return entry.update();
             });
           } else {
+            // create
             return environment.createEntry(CONTENTFUL_CONTENT_TYPE, {
-              fields: {
-                amount: {
-                  "en-US": parseFloat(this.state.amount)
-                },
-                date: {
-                  "en-US": this.state.date
-                },
-                // TODO photo
-                category: {
-                  "en-US": this.state.category
-                },
-                notes: {
-                  "en-US": this.state.notes
-                }
-              }
+              fields
             });
           }
         })
         .then(entry => {
-          console.log(entry);
+          // console.log(entry);
           return entry.publish();
         })
-        // TODO ASSETS
+
         .then(() => {
           // back to list
           this.setState({ loading: false });
@@ -173,18 +165,6 @@ export default class AddExpense extends React.Component {
             this.props.navigation.navigate("TabNavigator");
           }
         })
-        // .then(asset => {
-        //   console.log("prcessing...");
-        //   return asset.processForLocale("en-US", {
-        //     processingCheckWait: 2000
-        //   });
-        // })
-        // .then(asset => {
-        //   console.log("publishing...");
-        //   return asset.publish();
-        // })
-
-        // .then(asset => console.log(asset))
         .catch(console.error);
     } catch ({ code, message }) {
       console.log("err");
@@ -349,9 +329,9 @@ export default class AddExpense extends React.Component {
     //   // 4095
     // );
 
-    console.log(blob);
+    // console.log(blob);
 
-    client
+    return client
       .getSpace(CONTENTFUL_SPACE_ID)
       .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
       .then(environment =>
@@ -372,17 +352,20 @@ export default class AddExpense extends React.Component {
         })
       )
       .then(asset => {
-        console.log("prcessing...");
+        console.log("processing asset...");
         return asset.processForLocale("en-US", {
           processingCheckWait: 2000
         });
       })
       .then(asset => {
-        console.log("publishing...");
+        console.log("publishing asset...");
         return asset.publish();
       })
 
-      .then(asset => console.log(asset))
+      .then(asset => {
+        // console.log(asset);
+        return asset;
+      })
       .catch(console.error);
   };
 
