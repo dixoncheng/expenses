@@ -61,7 +61,7 @@ export default class HomeScreen extends React.Component {
                   ? `https:${item.fields.photo.fields.file.url}`
                   : null,
               date: new Date(item.fields.date),
-              amount: item.fields.amount,
+              amount: item.fields.amount + "",
               category: item.fields.category,
               notes: item.fields.notes
             };

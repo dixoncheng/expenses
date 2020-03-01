@@ -134,7 +134,9 @@ export default class AddExpense extends React.Component {
           if (this.state.id) {
             // update
             return environment.getEntry(this.state.id).then(entry => {
-              entry.fields = { ...fields };
+              console.log(entry.fields);
+              entry.fields = { ...entry.fields, ...fields };
+              console.log(entry.fields);
               return entry.update();
             });
           } else {
