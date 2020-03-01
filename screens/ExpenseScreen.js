@@ -22,8 +22,6 @@ import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import Categories from "../constants/Categories";
 
-// import RNFetchBlob from "rn-fetch-blob";
-
 const {
   createClient
 } = require("contentful-management/dist/contentful-management.browser.min.js");
@@ -98,7 +96,7 @@ export default class AddExpense extends React.Component {
       let newPhoto = {};
       if (this.state.photoUpdated) {
         newPhoto = await this.uploadImageAsync(this.state.photo.uri);
-        console.log(newPhoto);
+        // console.log(newPhoto);
       }
 
       // TODO delete existing linked image if available
@@ -166,202 +164,73 @@ export default class AddExpense extends React.Component {
           }
         })
         .catch(console.error);
-    } catch ({ code, message }) {
-      console.log("err");
-      console.log(message);
+    } catch (error) {
+      // console.log("err");
+      console.log(error);
       this.setState({ loading: false });
     }
   };
 
-  // uploadImageAsync = async (uri) => {
-  //   // Why are we using XMLHttpRequest? See:
-  //   // https://github.com/expo/expo/issues/2402#issuecomment-443726662
-  //   const blob = await new Promise((resolve, reject) => {
-  //     const xhr = new XMLHttpRequest();
-  //     xhr.onload = function() {
-  //       resolve(xhr.response);
-  //     };
-  //     xhr.onerror = function(e) {
-  //       console.log(e);
-  //       reject(new TypeError('Network request failed'));
-  //     };
-  //     xhr.responseType = 'blob';
-  //     xhr.open('GET', uri, true);
-  //     xhr.send(null);
-  //   });
-
-  //   // upload to firebase
-  //   const ref = firebase
-  //     .storage()
-  //     .ref()
-  //     .child(uuid.v4());
-  //   const snapshot = await ref.put(blob);
-
-  //   // We're done with the blob, close and release it
-  //   blob.close();
-
-  //   // return await snapshot.ref.getDownloadURL();
-  //   return await snapshot.ref;
-  // }
-
   uploadImageAsync = async uri => {
-    // console.log(uri);
-    // console.log(this.state.photo);
-    // const fileName = uri.split("/").pop();
-    const fileName = "test.jpg";
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "arraybuffer";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
 
-    // console.log(3);
-    // Infer the type of the image
-    // let match = /\.(\w+)$/.exec(filename);
+    const fileName = uri.split("/").pop();
+    // console.log(fileName);
 
     let uriParts = uri.split(".");
     let fileType = uriParts[uriParts.length - 1];
-
-    // console.log(4);
-    // let contentType = match ? `image/${match[1]}` : `image`;
     let contentType = `images/${fileType}`;
-    // console.log(2);
+    // console.log(contentType);
+
+    let fields = {
+      title: {
+        "en-US": fileName
+      },
+      file: {
+        "en-US": {
+          contentType,
+          fileName,
+          file: blob
+        }
+      }
+    };
+
     const client = createClient({
       accessToken: CONTENTFUL_MANAGEMENT_TOKEN
     });
-
-    // console.log(client);
-    // console.log(spaceId);
-    // let formData = new FormData();
-    // formData.append("photo", {
-    //   uri,
-    //   name: `photo.${fileType}`,
-    //   type: `image/${fileType}`
-    // });
-    // console.log(1);
-    // console.log("bbbbbbb");
-
-    // try {
-    //   const space = await client.getSpace(spaceId);
-
-    //   console.log("space");
-    //   console.log(space);
-    // } catch ({ message }) {
-    //   console.log("err");
-    //   console.log(message);
-    // }
-
-    // console.log("aaaaaaaaa space");
-
-    // return true;
-
-    // return await client
-    //   .getSpace(spaceId)
-    //   .then(space => space.getEnvironment("master"))
-    //   .then(environment => {
-    //     environment
-    //       .createUpload({ file: uploadStream })
-    //       .then(upload => {
-    //         console.log("creating asset...");
-    //         return space
-    //           .createAsset({
-    //             fields: {
-    //               title: {
-    //                 "en-US": fileName
-    //               },
-    //               file: {
-    //                 "en-US": {
-    //                   fileName: fileName,
-    //                   contentType: contentType,
-    //                   uploadFrom: {
-    //                     sys: {
-    //                       type: "Link",
-    //                       linkType: "Upload",
-    //                       id: upload.sys.id
-    //                     }
-    //                   }
-    //                 }
-    //               }
-    //             }
-    //           })
-    //           .then(asset => {
-    //             console.log("prcessing...");
-    //             return asset.processForLocale("en-US", {
-    //               processingCheckWait: 2000
-    //             });
-    //           })
-    //           .then(asset => {
-    //             console.log("publishing...");
-    //             return asset.publish();
-    //           })
-    //           .then(asset => {
-    //             console.log(asset);
-    //             return asset;
-    //           });
-    //       })
-    //       .catch(err => {
-    //         console.log(err);
-    //       });
-    //   });
-
-    // // Why are we using XMLHttpRequest? See:
-    // // https://github.com/expo/expo/issues/2402#issuecomment-443726662
-    // const blob = await new Promise((resolve, reject) => {
-    //   const xhr = new XMLHttpRequest();
-    //   xhr.onload = function() {
-    //     resolve(xhr.response);
-    //   };
-    //   xhr.onerror = function(e) {
-    //     console.log(e);
-    //     reject(new TypeError("Network request failed"));
-    //   };
-    //   xhr.responseType = "blob";
-    //   xhr.open("GET", uri, true);
-    //   xhr.send(null);
-    // });
-    // var RNFS = require("react-native-fs");
-
-    // const file = RNFS.readFile(uri);
-    // console.log(file);
-
-    // const blob = await RNFetchBlob.fs.readStream(
-    //   // file path
-    //   uri,
-    //   // encoding, should be one of `base64`, `utf8`, `ascii`
-    //   "base64"
-    //   // // (optional) buffer size, default to 4096 (4095 for BASE64 encoded data)
-    //   // // when reading file in BASE64 encoding, buffer size must be multiples of 3.
-    //   // 4095
-    // );
-
-    // console.log(blob);
 
     return client
       .getSpace(CONTENTFUL_SPACE_ID)
       .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
       .then(environment =>
         environment.createAssetFromFiles({
-          fields: {
-            title: {
-              "en-US": fileName
-            },
-            file: {
-              "en-US": {
-                contentType,
-                fileName,
-                // file: blob.stream()
-                file: "test"
-              }
-            }
-          }
+          fields
         })
       )
       .then(asset => {
-        console.log("processing asset...");
+        // console.log("processing asset...");
         return asset.processForLocale("en-US", {
           processingCheckWait: 2000
         });
       })
       .then(asset => {
-        console.log("publishing asset...");
+        // console.log("publishing asset...");
         return asset.publish();
       })
-
       .then(asset => {
         // console.log(asset);
         return asset;
@@ -394,7 +263,9 @@ export default class AddExpense extends React.Component {
 
       let photo = await this.camera.takePictureAsync({
         quality: Platform.OS === "ios" ? 0.3 : 0.5
+        // base64: true
       });
+      // console.log(photo);
       this.setState({ photoUpdated: true, photo });
     }
   };
@@ -420,6 +291,7 @@ export default class AddExpense extends React.Component {
     }
   };
 
+  // TODO android date picker
   // selectDateAndroid = async () => {
   //   try {
   //     const { action, year, month, day } = await DatePickerAndroid.open({

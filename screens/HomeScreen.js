@@ -61,7 +61,7 @@ export default class HomeScreen extends React.Component {
                   ? `https:${item.fields.photo.fields.file.url}`
                   : null,
               date: new Date(item.fields.date),
-              amount: item.fields.amount + "",
+              amount: item.fields.amount,
               category: item.fields.category,
               notes: item.fields.notes
             };
@@ -137,7 +137,10 @@ export default class HomeScreen extends React.Component {
             >
               <Text>{item.category}</Text>
               <Text>
-                ${item.amount >= 0 ? parseFloat(item.amount).toFixed(2) : 0}
+                $
+                {parseFloat(item.amount) >= 0
+                  ? parseFloat(item.amount).toFixed(2)
+                  : 0}
               </Text>
               <Text>{moment(item.date).format("MMMM D, YYYY")}</Text>
             </TouchableOpacity>
