@@ -4,25 +4,28 @@ import {
   View,
   StyleSheet,
   Text,
-  DatePickerIOS,
   Button,
   ActivityIndicator,
   Modal,
   Share,
-  DatePickerAndroid,
   TouchableHighlight,
   Alert
 } from "react-native";
-// import DateTimePicker from "@react-native-community/datetimepicker";
-
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system";
 import * as MailComposer from "expo-mail-composer";
-
-import * as firebase from "firebase";
 import moment from "moment";
 import XLSX from "xlsx";
 
 import Categories from "../constants/Categories";
+
+import {
+  CONTENTFUL_DELIVERY_TOKEN,
+  CONTENTFUL_SPACE_ID,
+  CONTENTFUL_CONTENT_TYPE
+} from "react-native-dotenv";
+
+const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
 export default class ReportsScreen extends React.Component {
   state = {
@@ -38,11 +41,17 @@ export default class ReportsScreen extends React.Component {
     title: "Reports"
   };
 
-  setDateFrom = newDate => {
+  componentDidMount() {
+    this.setDateFrom(null, new Date());
+    this.setDateTo(null, new Date());
+  }
+
+  setDateFrom = (event, newDate) => {
+    newDate.setHours(0, 0, 0);
     this.setState({ dateFrom: newDate });
   };
 
-  setDateTo = newDate => {
+  setDateTo = (event, newDate) => {
     // set to last second on the day so the expenses from that day are included
     newDate.setHours(23, 59, 59);
     // console.log(newDate.getTime());
@@ -59,21 +68,70 @@ export default class ReportsScreen extends React.Component {
 
     // retrieve all expenses for the chosen dates
     // let snapshot = await firebase.database().ref('/').once('value');
-    let snapshot = await firebase
-      .database()
-      .ref("/")
-      .orderByChild("date")
-      .startAt(this.state.dateFrom.getTime())
-      .endAt(this.state.dateTo.getTime())
-      .once("value");
 
-    if (snapshot.val()) {
+    // let snapshot = await firebase
+    //   .database()
+    //   .ref("/")
+    //   .orderByChild("date")
+    //   .startAt(this.state.dateFrom.getTime())
+    //   .endAt(this.state.dateTo.getTime())
+    //   .once("value");
+
+    // console.log(this.state.dateFrom);
+
+    // set to last second on the day so the expenses from that day are included
+
+    // const { dateFrom, dateTo } = this.state;
+    // dateFrom.setHours(0, 0, 0);
+    // dateTo.setHours(23, 59, 59);
+
+    // this.setState(state => {
+    //   state.dateFrom.setHours(0, 0, 0);
+    //   state.dateTo.setHours(23, 59, 59);
+    //   return {
+    //     dateFrom: state.dateFrom,
+    //     dateTo: state.dateTo
+    //   };
+    // }); //add 11pm 59 min
+
+    console.log(this.state);
+
+    const client = createClient({
+      accessToken: CONTENTFUL_DELIVERY_TOKEN,
+      space: CONTENTFUL_SPACE_ID
+    });
+    const result = await client
+      .getEntries({
+        content_type: CONTENTFUL_CONTENT_TYPE,
+        select:
+          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
+        "fields.date[gte]": this.state.dateFrom,
+        "fields.date[lte]": this.state.dateTo
+      })
+      .then(response => response)
+      .catch(function(error) {
+        console.log(error);
+      });
+
+    console.log(result.items);
+    return;
+
+    if (result.total) {
+      let arr = result.items.map(item => {
+        // console.log(item);
+        // return;
+        const { amount, category, date, notes } = item.fields;
+        return { amount, category, date, notes };
+      });
+      // console.log(arr);
+      // return;
+
       // let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
 
-      let arr = [];
-      snapshot.forEach(function(item) {
-        arr.push({ key: item.key, ...item.val() });
-      });
+      // let arr = [];
+      // snapshot.forEach(function(item) {
+      //   arr.push({ key: item.key, ...item.val() });
+      // });
 
       // console.log(arr);
       // this.setState({ showingModal: false, loading: false });
@@ -92,19 +150,19 @@ export default class ReportsScreen extends React.Component {
 
       this.setState({ loading: false, filename });
 
-      if (Platform.OS === "ios1") {
-        this.onShare();
-      } else {
-        this.setState({ showingModal: false });
+      // if (Platform.OS === "ios1") {
+      //   this.onShare();
+      // } else {
+      this.setState({ showingModal: false });
 
-        MailComposer.composeAsync({
-          recipients: ["dixontk@gmail.com"],
-          subject: `Expense report ${moment(this.state.dateFrom).format(
-            "MMM YY"
-          )} - ${moment(this.state.dateTo).format("MMM YY")}`,
-          attachments: [filename]
-        });
-      }
+      MailComposer.composeAsync({
+        recipients: ["dixontk@gmail.com"],
+        subject: `Expense report ${moment(this.state.dateFrom).format(
+          "MMM YY"
+        )} - ${moment(this.state.dateTo).format("MMM YY")}`,
+        attachments: [filename]
+      });
+      // }
     } else {
       this.setState({ showingModal: false, loading: false });
 
@@ -230,21 +288,22 @@ export default class ReportsScreen extends React.Component {
         {Platform.OS === "ios" && (
           <View>
             <Text style={styles.label}>From</Text>
-            <DatePickerIOS
-              date={this.state.dateFrom}
-              onDateChange={this.setDateFrom}
-              mode="date"
+            <DateTimePicker
+              value={this.state.dateFrom}
+              is24Hour={true}
+              display="default"
+              onChange={this.setDateFrom}
               style={{
                 borderBottomWidth: 1,
                 borderBottomColor: "lightgrey"
               }}
             />
-
             <Text style={styles.label}>To</Text>
-            <DatePickerIOS
-              date={this.state.dateTo}
-              onDateChange={this.setDateTo}
-              mode="date"
+            <DateTimePicker
+              value={this.state.dateTo}
+              is24Hour={true}
+              display="default"
+              onChange={this.setdateTo}
               style={{
                 borderBottomWidth: 1,
                 borderBottomColor: "lightgrey"

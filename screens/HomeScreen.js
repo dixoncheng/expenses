@@ -47,7 +47,11 @@ export default class HomeScreen extends React.Component {
       space: CONTENTFUL_SPACE_ID
     });
     client
-      .getEntries({ content_type: CONTENTFUL_CONTENT_TYPE })
+      .getEntries({
+        content_type: CONTENTFUL_CONTENT_TYPE,
+        select:
+          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo"
+      })
       .then(response => {
         this.setState({
           items: response.items.map(item => {
