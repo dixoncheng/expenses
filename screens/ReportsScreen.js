@@ -34,7 +34,9 @@ export default class ReportsScreen extends React.Component {
     loading: false,
     // items: [],
     showingModal: false,
-    filename: ""
+    filename: "",
+    showDateFrom: false,
+    showDateTo: false
   };
 
   static navigationOptions = {
@@ -47,16 +49,20 @@ export default class ReportsScreen extends React.Component {
   }
 
   setDateFrom = (event, newDate) => {
-    newDate.setHours(0, 0, 0);
-    this.setState({ dateFrom: newDate });
+    if (newDate) {
+      newDate.setHours(0, 0, 0);
+      this.setState({ dateFrom: newDate, showDateFrom: false });
+    }
   };
 
   setDateTo = (event, newDate) => {
-    // set to last second on the day so the expenses from that day are included
-    newDate.setHours(23, 59, 59);
-    // console.log(newDate.getTime());
-    // console.log(moment(newDate).format('MMMM Do YYYY, h:mm:ss a'));
-    this.setState({ dateTo: newDate }); //add 11pm 59 min
+    if (newDate) {
+      // set to last second on the day so the expenses from that day are included
+      newDate.setHours(23, 59, 59);
+      // console.log(newDate.getTime());
+      // console.log(moment(newDate).format('MMMM Do YYYY, h:mm:ss a'));
+      this.setState({ dateTo: newDate, showDateTo: false }); //add 11pm 59 min
+    }
   };
 
   onGenerate = async () => {
@@ -94,7 +100,7 @@ export default class ReportsScreen extends React.Component {
     //   };
     // }); //add 11pm 59 min
 
-    console.log(this.state);
+    // console.log(this.state);
 
     const client = createClient({
       accessToken: CONTENTFUL_DELIVERY_TOKEN,
@@ -105,17 +111,16 @@ export default class ReportsScreen extends React.Component {
         content_type: CONTENTFUL_CONTENT_TYPE,
         select:
           "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
-        "fields.date[gte]": this.state.dateFrom,
-        "fields.date[lte]": this.state.dateTo
+        "fields.date[gte]": moment(this.state.dateFrom).format(),
+        "fields.date[lte]": moment(this.state.dateTo).format(),
+        order: "-fields.date"
       })
       .then(response => response)
       .catch(function(error) {
         console.log(error);
       });
 
-    console.log(result.items);
-    return;
-
+    // console.log(result.items);
     if (result.total) {
       let arr = result.items.map(item => {
         // console.log(item);
@@ -150,7 +155,7 @@ export default class ReportsScreen extends React.Component {
 
       this.setState({ loading: false, filename });
 
-      // if (Platform.OS === "ios1") {
+      // if (Platform.OS === "ios") {
       //   this.onShare();
       // } else {
       this.setState({ showingModal: false });
@@ -265,21 +270,21 @@ export default class ReportsScreen extends React.Component {
   };
 
   selectDateAndroid = async which => {
-    try {
-      const { action, year, month, day } = await DatePickerAndroid.open({
-        // Use `new Date()` for current date.
-        // May 25 2020. Month 0 is January.
-        date: which === "from" ? this.state.dateFrom : this.state.dateTo
-      });
-      if (action !== DatePickerAndroid.dismissedAction) {
-        // Selected year, month (0-11), day
-        which === "from"
-          ? this.setDateFrom(new Date(year, month, day))
-          : this.setDateTo(new Date(year, month, day));
-      }
-    } catch ({ code, message }) {
-      console.warn("Cannot open date picker", message);
-    }
+    // try {
+    //   const { action, year, month, day } = await DatePickerAndroid.open({
+    //     // Use `new Date()` for current date.
+    //     // May 25 2020. Month 0 is January.
+    //     date: which === "from" ? this.state.dateFrom : this.state.dateTo
+    //   });
+    //   if (action !== DatePickerAndroid.dismissedAction) {
+    //     // Selected year, month (0-11), day
+    //     which === "from"
+    //       ? this.setDateFrom(new Date(year, month, day))
+    //       : this.setDateTo(new Date(year, month, day));
+    //   }
+    // } catch ({ code, message }) {
+    //   console.warn("Cannot open date picker", message);
+    // }
   };
 
   render() {
@@ -303,7 +308,7 @@ export default class ReportsScreen extends React.Component {
               value={this.state.dateTo}
               is24Hour={true}
               display="default"
-              onChange={this.setdateTo}
+              onChange={this.setDateTo}
               style={{
                 borderBottomWidth: 1,
                 borderBottomColor: "lightgrey"
@@ -315,7 +320,7 @@ export default class ReportsScreen extends React.Component {
         {Platform.OS !== "ios" && (
           <View>
             <TouchableHighlight
-              onPress={() => this.selectDateAndroid("from")}
+              onPress={() => this.setState({ showDateFrom: true })}
               underlayColor="lightgrey"
             >
               <View style={styles.row}>
@@ -326,8 +331,21 @@ export default class ReportsScreen extends React.Component {
               </View>
             </TouchableHighlight>
 
+            {this.state.showDateFrom && (
+              <DateTimePicker
+                value={this.state.dateFrom}
+                is24Hour={true}
+                display="default"
+                onChange={this.setDateFrom}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "lightgrey"
+                }}
+              />
+            )}
+
             <TouchableHighlight
-              onPress={() => this.selectDateAndroid("to")}
+              onPress={() => this.setState({ showDateTo: true })}
               underlayColor="lightgrey"
             >
               <View style={styles.row}>
@@ -337,6 +355,19 @@ export default class ReportsScreen extends React.Component {
                 </Text>
               </View>
             </TouchableHighlight>
+
+            {this.state.showDateTo && (
+              <DateTimePicker
+                value={this.state.dateTo}
+                is24Hour={true}
+                display="default"
+                onChange={this.setDateTo}
+                style={{
+                  borderBottomWidth: 1,
+                  borderBottomColor: "lightgrey"
+                }}
+              />
+            )}
           </View>
         )}
 

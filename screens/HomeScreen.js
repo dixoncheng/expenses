@@ -50,7 +50,8 @@ export default class HomeScreen extends React.Component {
       .getEntries({
         content_type: CONTENTFUL_CONTENT_TYPE,
         select:
-          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo"
+          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
+        order: "-fields.date"
       })
       .then(response => {
         this.setState({
