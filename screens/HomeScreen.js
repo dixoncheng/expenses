@@ -28,7 +28,7 @@ export default class HomeScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
     return {
-      headerTitle: "Expenses v0.2",
+      headerTitle: "Expenses",
       headerRight: <Button onPress={() => params.addExpense()} title="Add" />
     };
   };
