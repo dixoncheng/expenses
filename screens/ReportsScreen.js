@@ -59,49 +59,12 @@ export default class ReportsScreen extends React.Component {
     if (newDate) {
       // set to last second on the day so the expenses from that day are included
       newDate.setHours(23, 59, 59);
-      // console.log(newDate.getTime());
-      // console.log(moment(newDate).format('MMMM Do YYYY, h:mm:ss a'));
       this.setState({ dateTo: newDate, showDateTo: false }); //add 11pm 59 min
     }
   };
 
   onGenerate = async () => {
     this.setState({ showingModal: true, loading: true });
-
-    // console.log(this.state);
-    // console.log(`startAt: ${this.state.dateFrom.getTime()}`);
-    // console.log(`endAt: ${this.state.dateTo.getTime()}`);
-
-    // retrieve all expenses for the chosen dates
-    // let snapshot = await firebase.database().ref('/').once('value');
-
-    // let snapshot = await firebase
-    //   .database()
-    //   .ref("/")
-    //   .orderByChild("date")
-    //   .startAt(this.state.dateFrom.getTime())
-    //   .endAt(this.state.dateTo.getTime())
-    //   .once("value");
-
-    // console.log(this.state.dateFrom);
-
-    // set to last second on the day so the expenses from that day are included
-
-    // const { dateFrom, dateTo } = this.state;
-    // dateFrom.setHours(0, 0, 0);
-    // dateTo.setHours(23, 59, 59);
-
-    // this.setState(state => {
-    //   state.dateFrom.setHours(0, 0, 0);
-    //   state.dateTo.setHours(23, 59, 59);
-    //   return {
-    //     dateFrom: state.dateFrom,
-    //     dateTo: state.dateTo
-    //   };
-    // }); //add 11pm 59 min
-
-    // console.log(this.state);
-
     const client = createClient({
       accessToken: CONTENTFUL_DELIVERY_TOKEN,
       space: CONTENTFUL_SPACE_ID
@@ -120,27 +83,11 @@ export default class ReportsScreen extends React.Component {
         console.log(error);
       });
 
-    // console.log(result.items);
     if (result.total) {
       let arr = result.items.map(item => {
-        // console.log(item);
-        // return;
         const { amount, category, date, notes } = item.fields;
         return { amount, category, date, notes };
       });
-      // console.log(arr);
-      // return;
-
-      // let arr = Object.keys(snapshot.val()).map((key) => { return {key: key, ...snapshot.val()[key]} });
-
-      // let arr = [];
-      // snapshot.forEach(function(item) {
-      //   arr.push({ key: item.key, ...item.val() });
-      // });
-
-      // console.log(arr);
-      // this.setState({ showingModal: false, loading: false });
-      // return;
 
       // generate csv
       let report = this.generateReport(arr);
@@ -209,8 +156,6 @@ export default class ReportsScreen extends React.Component {
       sheetHeadingsCounters[arr[i].category] = c;
     }
 
-    // console.log(sheetHeadingsCounters);
-
     // add empty row to separate totals
     data.push({ " ": "" });
 
@@ -227,7 +172,6 @@ export default class ReportsScreen extends React.Component {
       };
     }
     data.push(row);
-
     // console.log(data);
 
     const ws = XLSX.utils.json_to_sheet(data, { header: Categories });
@@ -267,24 +211,6 @@ export default class ReportsScreen extends React.Component {
       // alert(error.message);
       this.setState({ showingModal: false });
     }
-  };
-
-  selectDateAndroid = async which => {
-    // try {
-    //   const { action, year, month, day } = await DatePickerAndroid.open({
-    //     // Use `new Date()` for current date.
-    //     // May 25 2020. Month 0 is January.
-    //     date: which === "from" ? this.state.dateFrom : this.state.dateTo
-    //   });
-    //   if (action !== DatePickerAndroid.dismissedAction) {
-    //     // Selected year, month (0-11), day
-    //     which === "from"
-    //       ? this.setDateFrom(new Date(year, month, day))
-    //       : this.setDateTo(new Date(year, month, day));
-    //   }
-    // } catch ({ code, message }) {
-    //   console.warn("Cannot open date picker", message);
-    // }
   };
 
   render() {

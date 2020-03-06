@@ -69,8 +69,8 @@ ReportsStack.navigationOptions = {
 ReportsStack.path = "";
 
 const tabNavigator = createBottomTabNavigator({
-  ReportsStack,
-  HomeStack
+  HomeStack,
+  ReportsStack
 });
 
 tabNavigator.path = "";
