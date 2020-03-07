@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FlatList,
   Button,
@@ -8,7 +8,6 @@ import {
   View,
   Alert
 } from "react-native";
-
 import moment from "moment";
 const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
@@ -18,29 +17,17 @@ import {
   CONTENTFUL_CONTENT_TYPE
 } from "react-native-dotenv";
 
-export default class HomeScreen extends React.Component {
-  state = {
-    items: [],
-    page: 1,
-    loadingMore: false
-  };
+const HomeScreen = ({ navigation }) => {
+  const [items, setItems] = useState([]);
 
-  static navigationOptions = ({ navigation }) => {
-    const { params = {} } = navigation.state;
-    return {
-      headerTitle: "Expenses",
-      headerRight: <Button onPress={() => params.addExpense()} title="Add" />
-    };
-  };
-
-  componentDidMount() {
-    this.props.navigation.setParams({
-      addExpense: () => this._addExpense(true)
+  useEffect(() => {
+    navigation.setParams({
+      addExpense: () => addExpense()
     });
-    this._fetchData();
-  }
+    fetchData();
+  }, []);
 
-  _fetchData = () => {
+  const fetchData = () => {
     // console.log("fetch");
     const client = createClient({
       accessToken: CONTENTFUL_DELIVERY_TOKEN,
@@ -54,8 +41,8 @@ export default class HomeScreen extends React.Component {
         order: "-fields.date"
       })
       .then(response => {
-        this.setState({
-          items: response.items.map(item => {
+        setItems(
+          response.items.map(item => {
             // if (item.fields.photo) {
             //   console.log(item);
             // }
@@ -71,100 +58,83 @@ export default class HomeScreen extends React.Component {
               notes: item.fields.notes
             };
           })
-        });
+        );
       })
       .catch(function(error) {
         console.log(error);
       });
   };
 
-  _addExpense(visible) {
-    this.props.navigation.navigate("AddExpense", { refresh: this._fetchData });
-  }
+  const addExpense = () => {
+    navigation.navigate("AddExpense", { refresh: fetchData });
+  };
 
-  onItemPress = item => {
-    // console.log(item);
-    this.props.navigation.navigate("Expense", {
+  const onItemPress = item => {
+    navigation.navigate("Expense", {
       item,
-      refresh: this._fetchData
+      refresh: fetchData
     });
   };
 
-  onItemLongPress = item => {
+  const onItemLongPress = item => {
     Alert.alert(
       "Delete this item?",
       `${item.category} $${parseFloat(item.amount || 0).toFixed(2)}`,
       [
-        { text: "Yes", onPress: () => this.deleteItem(item) },
+        { text: "Yes", onPress: () => deleteItem(item) },
         { text: "No", onPress: () => {}, style: "cancel" }
       ]
     );
   };
 
-  deleteItem = item => {
-    // firebase
-    //   .database()
-    //   .ref(item.key)
-    //   .remove();
-    // // delete linked image
-    // if (item.photoRef) {
-    //   firebase
-    //     .storage()
-    //     .ref()
-    //     .child(item.photoRef)
-    //     .delete();
-    // }
-  };
+  const deleteItem = item => {};
 
-  _handleLoadMore = () => {
-    // console.log("_handleLoadMore");
-    // this.setState(
-    //   (prevState, nextProps) => ({
-    //     page: prevState.page + 1,
-    //     loadingMore: true
-    //   }),
-    //   () => {
-    //     this._fetchData();
-    //   }
-    // );
-  };
+  // const handleLoadMore = () => {
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <FlatList
-          data={this.state.items}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.item}
-              onPress={() => this.onItemPress(item)}
-              onLongPress={() => this.onItemLongPress(item)}
-            >
-              <Text>{item.category}</Text>
-              <Text>
-                $
-                {parseFloat(item.amount) >= 0
-                  ? parseFloat(item.amount).toFixed(2)
-                  : 0}
-              </Text>
-              <Text>{moment(item.date).format("MMMM D, YYYY")}</Text>
-            </TouchableOpacity>
-          )}
-          ItemSeparatorComponent={() => (
-            <View
-              style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey" }}
-            />
-          )}
-          // keyExtractor={(item, index) => index.toString()}
-          // extraData={this.state}
-          // onEndReached={this._handleLoadMore}
-          // onEndReachedThreshold={0.5}
-          initialNumToRender={10}
-        />
-      </View>
-    );
-  }
-}
+  // };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={items}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => onItemPress(item)}
+            onLongPress={() => onItemLongPress(item)}
+          >
+            <Text>{item.category}</Text>
+            <Text>
+              $
+              {parseFloat(item.amount) >= 0
+                ? parseFloat(item.amount).toFixed(2)
+                : 0}
+            </Text>
+            <Text>{moment(item.date).format("MMMM D, YYYY")}</Text>
+          </TouchableOpacity>
+        )}
+        ItemSeparatorComponent={() => (
+          <View
+            style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey" }}
+          />
+        )}
+        // keyExtractor={(item, index) => index.toString()}
+        // extraData={}
+        // onEndReached={_handleLoadMore}
+        // onEndReachedThreshold={0.5}
+        initialNumToRender={10}
+      />
+    </View>
+  );
+};
+
+HomeScreen["navigationOptions"] = ({ navigation }) => {
+  const { params = {} } = navigation.state;
+  return {
+    headerTitle: "Expenses",
+    headerRight: <Button onPress={() => params.addExpense()} title="Add" />
+  };
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -175,3 +145,5 @@ const styles = StyleSheet.create({
     padding: 10
   }
 });
+
+export default HomeScreen;

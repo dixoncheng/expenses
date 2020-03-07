@@ -50,7 +50,7 @@ const ExpenseStack = createStackNavigator(
 
 const ReportsStack = createStackNavigator(
   {
-    Links: ReportsScreen
+    Reports: ReportsScreen
   },
   config
 );

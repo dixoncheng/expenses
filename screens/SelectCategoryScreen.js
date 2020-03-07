@@ -1,80 +1,67 @@
-import React from 'react';
-import { 
+import React, { useState } from "react";
+import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
   Text,
   View,
   Button
-} from 'react-native';
+} from "react-native";
 
-import Categories from '../constants/Categories';
+import Categories from "../constants/Categories";
 
-export default class selectCategory extends React.Component {
+const selectCategory = ({ navigation }) => {
+  const [selected, setSelected] = useState(
+    navigation.getParam("selected", null)
+  );
 
-  state = {
-    selected: this.props.navigation.getParam('selected', null)
-  }
-
-  static navigationOptions = ({ navigation }) => {
-    // const { params = {} } = navigation.state;
-
-    return {
-      headerTitle: 'Category',
-      // headerBackTitle: 'Back'
-      headerLeft: (
-        <Button
-          onPress={() => navigation.navigate('Expense')}
-          title="Cancel"
-        />
-      ),
-    }
-  }
-
-  onPress = (item) => {
-    this.setState({ selected: item });
-    const { params = {} } = this.props.navigation.state;
+  const onPress = item => {
+    setSelected(item);
+    const { params = {} } = navigation.state;
     params.setCategory(item);
-    this.props.navigation.goBack();
-  }
+    navigation.goBack();
+  };
 
-  render() {
-    return (
-      <View style={styles.container}>
-        
-        <FlatList
-          data={Categories}
-          renderItem={
-            ({item}) => <TouchableOpacity onPress={() => this.onPress(item)}>
-              <View style={styles.item}>
-                <Text style={{ fontSize: 18 }}>{item}</Text>
-                {this.state.selected == item && <Text>✔</Text>}
-              </View>
-            </TouchableOpacity>}
-          keyExtractor={(item, index) => item}
-          extraData={this.state}
-        />
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={Categories}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => onPress(item)}>
+            <View style={styles.item}>
+              <Text style={{ fontSize: 18 }}>{item}</Text>
+              {selected == item && <Text>✔</Text>}
+            </View>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item, index) => item}
+      />
+    </View>
+  );
+};
 
-      </View>
-    );
-  }
-}
+selectCategory["navigationOptions"] = ({ navigation }) => {
+  return {
+    headerTitle: "Category",
+    headerLeft: (
+      <Button onPress={() => navigation.navigate("Expense")} title="Cancel" />
+    )
+  };
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // padding: 10,
-    // paddingTop: 40,
-    backgroundColor: 'white',
-    // borderTopWidth: 1,
-    // borderTopColor: 'grey'
+    backgroundColor: "white"
   },
   item: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 10,
-    height: 44,
-  },
+    height: 44
+  }
 });
+
+export default selectCategory;

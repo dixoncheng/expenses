@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { PASSWORD } from "react-native-dotenv";
 import {
   Button,
@@ -8,22 +8,20 @@ import {
   AsyncStorage
 } from "react-native";
 
-export default class LoginScreen extends React.Component {
-  state = {
-    password: "",
-    error: false
-  };
+const LoginScreen = ({ login }) => {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
 
-  validate = () => {
-    if (this.state.password === PASSWORD) {
-      this._storeData();
-      this.props.login();
+  const validate = () => {
+    if (password === PASSWORD) {
+      storeData();
+      login();
     } else {
       alert("Password incorrect");
     }
   };
 
-  _storeData = async () => {
+  const storeData = async () => {
     try {
       await AsyncStorage.setItem("expensesLoggedIn", "1");
     } catch (error) {
@@ -31,22 +29,20 @@ export default class LoginScreen extends React.Component {
     }
   };
 
-  render() {
-    return (
-      <SafeAreaView style={styles.container}>
-        <TextInput
-          value={this.state.password}
-          onChangeText={password => this.setState({ password })}
-          placeholder="password"
-          secureTextEntry={true}
-          style={styles.input}
-          onSubmitEditing={this.validate}
-        />
-        <Button onPress={this.validate} title="Login" />
-      </SafeAreaView>
-    );
-  }
-}
+  return (
+    <SafeAreaView style={styles.container}>
+      <TextInput
+        value={password}
+        onChangeText={password => setPassword(password)}
+        placeholder="password"
+        secureTextEntry={true}
+        style={styles.input}
+        onSubmitEditing={validate}
+      />
+      <Button onPress={validate} title="Login" />
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -66,3 +62,5 @@ const styles = StyleSheet.create({
     marginVertical: 10
   }
 });
+
+export default LoginScreen;
