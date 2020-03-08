@@ -10,15 +10,12 @@ import {
 
 import Categories from "../constants/Categories";
 
-const selectCategory = ({ navigation }) => {
-  const [selected, setSelected] = useState(
-    navigation.getParam("selected", null)
-  );
+const selectCategory = ({ navigation, route }) => {
+  const [selected, setSelected] = useState(route.params?.selected ?? null);
 
   const onPress = item => {
     setSelected(item);
-    const { params = {} } = navigation.state;
-    params.setCategory(item);
+    route.params.setCategory(item);
     navigation.goBack();
   };
 

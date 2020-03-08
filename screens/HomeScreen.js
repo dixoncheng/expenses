@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   FlatList,
   Button,
@@ -21,11 +21,22 @@ const HomeScreen = ({ navigation }) => {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    navigation.setParams({
-      addExpense: () => addExpense()
-    });
     fetchData();
   }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: "Expenses",
+      headerRight: () => (
+        <Button
+          onPress={() => {
+            navigation.navigate("AddExpense");
+          }}
+          title="Add"
+        />
+      )
+    });
+  }, [navigation]);
 
   const fetchData = () => {
     // console.log("fetch");
@@ -65,15 +76,9 @@ const HomeScreen = ({ navigation }) => {
       });
   };
 
-  const addExpense = () => {
-    navigation.navigate("AddExpense", { refresh: fetchData });
-  };
-
   const onItemPress = item => {
-    navigation.navigate("Expense", {
-      item,
-      refresh: fetchData
-    });
+    // console.log("p");
+    navigation.push("Expense", { item });
   };
 
   const onItemLongPress = item => {
@@ -101,7 +106,7 @@ const HomeScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.item}
             onPress={() => onItemPress(item)}
-            onLongPress={() => onItemLongPress(item)}
+            // onLongPress={() => onItemLongPress(item)}
           >
             <Text>{item.category}</Text>
             <Text>
@@ -126,14 +131,6 @@ const HomeScreen = ({ navigation }) => {
       />
     </View>
   );
-};
-
-HomeScreen["navigationOptions"] = ({ navigation }) => {
-  const { params = {} } = navigation.state;
-  return {
-    headerTitle: "Expenses",
-    headerRight: <Button onPress={() => params.addExpense()} title="Add" />
-  };
 };
 
 const styles = StyleSheet.create({

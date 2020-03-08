@@ -26,7 +26,7 @@ import {
 
 const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
-const ReportsScreen = () => {
+const ReportsScreen = ({ navigation }) => {
   const [dateFrom, setDateFrom] = useState(new Date());
   const [dateTo, setDateTo] = useState(new Date());
   const [showDateFrom, setShowDateFrom] = useState(false);

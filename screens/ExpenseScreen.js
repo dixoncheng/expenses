@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   Platform,
   StyleSheet,
@@ -17,10 +17,9 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-import * as Permissions from "expo-permissions";
+// import * as Permissions from "expo-permissions";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-import Categories from "../constants/Categories";
 
 const {
   createClient
@@ -33,74 +32,57 @@ import {
   CONTENTFUL_ENVIRONMENT
 } from "react-native-dotenv";
 
-export default class AddExpense extends React.Component {
-  state = {
-    id: null,
-    date: new Date(),
-    amount: null,
-    category: Categories[0],
-    photo: null,
-    notes: null,
-    hasCameraPermission: null,
-    loading: false,
-    photoRef: null,
-    photoUpdated: false
-  };
+const AddExpense = ({ navigation, route }) => {
+  const [item, setItem] = useState(route.params?.item ?? {});
+  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [photoUpdated, setPhotoUpdated] = useState(false);
 
-  async componentDidMount() {
-    let item = this.props.navigation.getParam("item");
-    if (item) {
-      this.setState(item);
-    }
-
-    this.props.navigation.setParams({ save: this.save });
-
-    const { status } = await Permissions.askAsync(Permissions.CAMERA);
-    this.setState({ hasCameraPermission: status === "granted" });
-
-    await Permissions.askAsync(Permissions.CAMERA_ROLL);
-  }
-
-  static navigationOptions = ({ navigation }) => {
-    const { params = {} } = navigation.state;
-
-    return {
-      headerTitle: params.item ? "Edit Expense" : "Add Expense",
-      headerLeft: (
+  useLayoutEffect(() => {
+    console.log("layouteffect");
+    // console.log(route);
+    console.log(item);
+    navigation.setOptions({
+      headerTitle: item.id ? "Edit Expense" : "Add Expense",
+      headerRight: () => <Button onPress={() => save()} title="Save" />,
+      headerLeft: () => (
         <Button
           onPress={() =>
-            params.item
-              ? navigation.navigate("Home")
-              : navigation.navigate("TabNavigator")
+            // route.params?.item
+            //   ? navigation.navigate("Home")
+            //   : navigation.navigate("TabNavigator")
+            navigation.navigate("Home")
           }
-          title={params.item ? "Back" : "Cancel"}
-        />
-      ),
-      headerRight: (
-        <Button
-          // onPress={navigation.getParam('save')}
-          onPress={() => params.save()}
-          title="Save"
+          title={route.params?.item ? "Back" : "Cancel"}
         />
       )
-      // headerBackTitle: 'Cancel'
-    };
-  };
+    });
+  }, [navigation, item]);
 
-  save = async () => {
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestPermissionsAsync();
+      setHasCameraPermission(status === "granted");
+    })();
+  }, []);
+
+  const save = () => {
+    console.log(item);
+    setLoading(false);
+    return;
+
     try {
       // show loading spinner
-      this.setState({ loading: true });
+      setLoading(true);
 
       // TODO upload photo
       let newPhoto = {};
-      if (this.state.photoUpdated) {
-        newPhoto = await this.uploadImageAsync(this.state.photo.uri);
-        // console.log(newPhoto);
+      if (photoUpdated) {
+        // newPhoto = await uploadImageAsync(photo.uri);
       }
 
       // TODO delete existing linked image if available
-      // if (this.state.photoUpdated && this.state.photoRef) {
+      // if (photoUpdated && photoRef) {
       // }
 
       // save to db
@@ -113,13 +95,13 @@ export default class AddExpense extends React.Component {
         .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
         .then(environment => {
           const fields = {
-            amount: { "en-US": parseFloat(this.state.amount) },
-            notes: { "en-US": this.state.notes },
-            date: { "en-US": this.state.date },
-            category: { "en-US": this.state.category }
+            amount: { "en-US": parseFloat(item.amount) },
+            notes: { "en-US": item.notes },
+            date: { "en-US": item.date },
+            category: { "en-US": item.category }
           };
 
-          if (this.state.photoUpdated) {
+          if (photoUpdated) {
             fields.photo = {
               "en-US": {
                 sys: {
@@ -131,12 +113,10 @@ export default class AddExpense extends React.Component {
             };
           }
 
-          if (this.state.id) {
+          if (item.id) {
             // update
-            return environment.getEntry(this.state.id).then(entry => {
-              console.log(entry.fields);
+            return environment.getEntry(item.id).then(entry => {
               entry.fields = { ...entry.fields, ...fields };
-              console.log(entry.fields);
               return entry.update();
             });
           } else {
@@ -153,27 +133,26 @@ export default class AddExpense extends React.Component {
 
         .then(() => {
           // back to list
-          this.setState({ loading: false });
+          setLoading(false);
+          navigation.state.params.refresh();
 
-          this.props.navigation.state.params.refresh();
-
-          if (this.state.id) {
+          if (item.id) {
             // update
-            this.props.navigation.navigate("Home");
+            navigation.navigate("Home");
           } else {
             // create
-            this.props.navigation.navigate("TabNavigator");
+            navigation.navigate("TabNavigator");
           }
         })
         .catch(console.error);
     } catch (error) {
       // console.log("err");
       console.log(error);
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  uploadImageAsync = async uri => {
+  const uploadImageAsync = async uri => {
     // Why are we using XMLHttpRequest? See:
     // https://github.com/expo/expo/issues/2402#issuecomment-443726662
     const blob = await new Promise((resolve, reject) => {
@@ -240,265 +219,208 @@ export default class AddExpense extends React.Component {
       .catch(console.error);
   };
 
-  selectCategory = () => {
-    this.props.navigation.navigate("SelectCategory", {
-      selected: this.state.category,
-      setCategory: this.setCategory
+  const selectCategory = () => {
+    navigation.navigate("SelectCategory", {
+      selected: item.category,
+      setCategory
     });
   };
 
-  setCategory = item => {
-    this.setState({ category: item });
+  const setCategory = option => {
+    setItem({ ...item, category: option });
   };
 
-  setDate = (event, newDate) => {
-    this.setState({ date: newDate });
+  const setDate = (event, newDate) => {
+    setItem({ ...item, date: newDate });
   };
 
-  takePhoto = async () => {
+  const takePhoto = async () => {
     if (this.camera) {
-      // let ratios = await this.camera.getSupportedRatiosAsync();
+      // let ratios = await camera.getSupportedRatiosAsync();
       // console.log(ratios);
 
-      // let sizes = await this.camera.getAvailablePictureSizesAsync('4:3');
+      // let sizes = await camera.getAvailablePictureSizesAsync('4:3');
       // console.log(sizes);
 
-      let photo = await this.camera.takePictureAsync({
+      let photo = await camera.takePictureAsync({
         quality: Platform.OS === "ios" ? 0.3 : 0.5
         // base64: true
       });
       // console.log(photo);
-      this.setState({ photoUpdated: true, photo });
+      setPhotoUpdated(true);
+      setItem({ ...item, photo });
     }
   };
 
-  retakePhoto = () => {
-    this.setState({ photo: null }, () => {
-      // if (this.camera) {
-      //   this.camera.resumePreview();
-      // }
-    });
+  const retakePhoto = () => {
+    setItem({ ...item, photo: null });
   };
 
-  pickPhoto = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+  const pickPhoto = async () => {
+    const photo = await ImagePicker.launchImageLibraryAsync({
       // allowsEditing: true,
       aspect: [4, 3]
     });
 
-    // console.log(result);
-
     if (!result.cancelled) {
-      this.setState({ photoUpdated: true, photo: result });
+      setPhotoUpdated(true);
+      setItem({ ...item, photo });
     }
   };
 
-  // TODO android date picker
-  // selectDateAndroid = async () => {
-  //   try {
-  //     const { action, year, month, day } = await DatePickerAndroid.open({
-  //       // Use `new Date()` for current date.
-  //       // May 25 2020. Month 0 is January.
-  //       date: this.state.date
-  //     });
-  //     if (action !== DatePickerAndroid.dismissedAction) {
-  //       // Selected year, month (0-11), day
-  //       this.setDate(new Date(year, month, day));
-  //     }
-  //   } catch ({ code, message }) {
-  //     console.warn("Cannot open date picker", message);
-  //   }
-  // };
-
-  render() {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Amount</Text>
-          <TextInput
-            style={{
-              fontSize: 18,
-              flex: 1,
-              textAlign: "right"
-            }}
-            keyboardType="decimal-pad"
-            placeholder="0"
-            onChangeText={amount => this.setState({ amount })}
-            value={this.state.amount}
-          />
-        </View>
-
-        <TouchableHighlight
-          onPress={this.selectCategory}
-          underlayColor="lightgrey"
-        >
-          <View style={styles.row}>
-            <Text style={styles.label}>Category</Text>
-            <Text
-              style={{
-                fontSize: 18,
-                textAlign: "right"
-              }}
-            >
-              {this.state.category} ›
-            </Text>
-          </View>
-        </TouchableHighlight>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={{
-              fontSize: 18,
-              flex: 1,
-              textAlign: "right"
-            }}
-            // keyboardType="number-pad"
-            // placeholder="0"
-            onChangeText={notes => this.setState({ notes })}
-            value={this.state.notes}
-          />
-        </View>
-
-        <DateTimePicker
-          // testID="dateTimePicker"
-          // timeZoneOffsetInMinutes={0}
-          value={this.state.date}
-          // mode={mode}
-          is24Hour={true}
-          display="default"
-          onChange={this.setDate}
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.row}>
+        <Text style={styles.label}>Amount</Text>
+        <TextInput
+          style={{
+            fontSize: 18,
+            flex: 1,
+            textAlign: "right"
+          }}
+          keyboardType="decimal-pad"
+          placeholder="0"
+          onChangeText={amount => {
+            setItem(item => ({ ...item, amount }));
+          }}
+          value={item.amount}
         />
+      </View>
 
-        {/* {Platform.OS === "ios" && (
-          <DatePickerIOS
-            date={this.state.date}
-            onDateChange={this.setDate}
-            mode="date"
+      <TouchableHighlight onPress={selectCategory} underlayColor="lightgrey">
+        <View style={styles.row}>
+          <Text style={styles.label}>Category</Text>
+          <Text
             style={{
-              borderBottomWidth: 1,
-              borderBottomColor: "lightgrey"
-            }}
-          />
-        )} */}
-
-        {/* {Platform.OS !== "ios" && (
-          <TouchableHighlight
-            onPress={() => this.selectDateAndroid("from")}
-            underlayColor="lightgrey"
-          >
-            <View style={styles.row}>
-              <Text style={styles.label}>Date</Text>
-              <Text style={styles.label}>
-                {moment(this.state.date).format("D-MMM-YY")}
-              </Text>
-            </View>
-          </TouchableHighlight>
-        )} */}
-
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "transparent",
-              justifyContent: "flex-end"
+              fontSize: 18,
+              textAlign: "right"
             }}
           >
-            {this.state.hasCameraPermission === null ||
-              (this.state.hasCameraPermission === false && <View />)}
+            {item.category} ›
+          </Text>
+        </View>
+      </TouchableHighlight>
 
-            {this.state.hasCameraPermission === true && !this.state.photo && (
-              <Camera
-                ref={ref => {
-                  this.camera = ref;
-                }}
-                style={{ flex: 1 }}
-                type="back"
-                pictureSize={Platform.OS === "ios" ? "1920x1080" : "1600x1200"}
-              >
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: "transparent",
-                    justifyContent: "flex-end"
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      paddingLeft: 10,
-                      paddingRight: 10
-                    }}
-                  >
-                    <View style={{ flex: 1 }}></View>
+      <View style={styles.row}>
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={{
+            fontSize: 18,
+            flex: 1,
+            textAlign: "right"
+          }}
+          // keyboardType="number-pad"
+          // placeholder="0"
+          onChangeText={notes => setItem({ ...item, notes })}
+          value={item.notes}
+        />
+      </View>
 
-                    <View style={{ flex: 1 }}>
-                      <Button title="Take photo" onPress={this.takePhoto} />
-                    </View>
+      <DateTimePicker
+        value={item.date || new Date()}
+        is24Hour={true}
+        display="default"
+        onChange={setDate}
+      />
 
-                    <TouchableOpacity
-                      style={{ flex: 1 }}
-                      onPress={this.pickPhoto}
-                      style={{ flex: 1 }}
-                    >
-                      <Text
-                        style={{
-                          textAlign: "right",
-                          color: "white"
-                        }}
-                      >
-                        Gallery
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Camera>
-            )}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "transparent",
+            justifyContent: "flex-end"
+          }}
+        >
+          {hasCameraPermission === null ||
+            (hasCameraPermission === false && <View />)}
 
-            {this.state.photo ? (
-              <ImageBackground
-                source={
-                  this.state.photo.uri
-                    ? this.state.photo
-                    : { uri: this.state.photo }
-                }
+          {hasCameraPermission === true && !item.photo && (
+            <Camera
+              ref={ref => {
+                camera = ref;
+              }}
+              style={{ flex: 1 }}
+              type="back"
+              pictureSize={Platform.OS === "ios" ? "1920x1080" : "1600x1200"}
+            >
+              <View
                 style={{
                   flex: 1,
-                  width: "100%",
+                  backgroundColor: "transparent",
                   justifyContent: "flex-end"
                 }}
               >
-                <Button title="Retake photo" onPress={this.retakePhoto} />
-              </ImageBackground>
-            ) : null}
-          </View>
-        </TouchableWithoutFeedback>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingLeft: 10,
+                    paddingRight: 10
+                  }}
+                >
+                  <View style={{ flex: 1 }}></View>
 
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={this.state.loading}
-          onRequestClose={() => {}}
+                  <View style={{ flex: 1 }}>
+                    <Button title="Take photo" onPress={takePhoto} />
+                  </View>
+
+                  <TouchableOpacity
+                    style={{ flex: 1 }}
+                    onPress={pickPhoto}
+                    style={{ flex: 1 }}
+                  >
+                    <Text
+                      style={{
+                        textAlign: "right",
+                        color: "white"
+                      }}
+                    >
+                      Gallery
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Camera>
+          )}
+
+          {item.photo ? (
+            <ImageBackground
+              source={item.photo.uri ? item.photo : { uri: item.photo }}
+              style={{
+                flex: 1,
+                width: "100%",
+                justifyContent: "flex-end"
+              }}
+            >
+              <Button title="Retake photo" onPress={retakePhoto} />
+            </ImageBackground>
+          ) : null}
+        </View>
+      </TouchableWithoutFeedback>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={loading}
+        onRequestClose={() => {}}
+      >
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              backgroundColor: "rgba(0,0,0,0.4)",
+              alignItems: "center",
+              justifyContent: "center"
+            }
+          ]}
         >
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: "rgba(0,0,0,0.4)",
-                alignItems: "center",
-                justifyContent: "center"
-              }
-            ]}
-          >
-            <ActivityIndicator color="#fff" animating size="large" />
-          </View>
-        </Modal>
-      </SafeAreaView>
-    );
-  }
-}
+          <ActivityIndicator color="#fff" animating size="large" />
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -516,3 +438,5 @@ const styles = StyleSheet.create({
     fontSize: 18
   }
 });
+
+export default AddExpense;
