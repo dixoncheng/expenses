@@ -14,11 +14,20 @@ import { createStackNavigator } from "@react-navigation/stack";
 import BottomTabNavigator from "./navigation/BottomTabNavigator";
 import ExpenseScreen from "./screens/ExpenseScreen";
 import SelectCategoryScreen from "./screens/SelectCategoryScreen";
-
 import LoginScreen from "./screens/LoginScreen";
 
-const Stack = createStackNavigator();
+const RootStack = createStackNavigator();
+
 const ExpenseStack = createStackNavigator();
+const ExpenseStackScreen = () => (
+  <ExpenseStack.Navigator>
+    <ExpenseStack.Screen name="AddExpense" component={ExpenseScreen} />
+    <ExpenseStack.Screen
+      name="SelectCategory"
+      component={SelectCategoryScreen}
+    />
+  </ExpenseStack.Navigator>
+);
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
@@ -56,16 +65,6 @@ export default function App(props) {
     loadResourcesAndDataAsync();
   }, []);
 
-  const ExpenseStackScreens = () => (
-    <ExpenseStack.Navigator>
-      <ExpenseStack.Screen name="AddExpense" component={ExpenseScreen} />
-      <ExpenseStack.Screen
-        name="SelectCategory"
-        component={SelectCategoryScreen}
-      />
-    </ExpenseStack.Navigator>
-  );
-
   if (!isLoadingComplete && !props.skipLoadingScreen) {
     return null;
   } else {
@@ -74,24 +73,24 @@ export default function App(props) {
         {Platform.OS === "ios" && <StatusBar barStyle="default" />}
 
         <NavigationContainer>
-          <Stack.Navigator headerMode="none" mode="modal">
+          <RootStack.Navigator headerMode="none" mode="modal">
             {isLoggedIn ? (
               <>
-                <Stack.Screen name="Root" component={BottomTabNavigator} />
-                <Stack.Screen
+                <RootStack.Screen name="Root" component={BottomTabNavigator} />
+                <RootStack.Screen
                   name="AddExpense"
-                  component={ExpenseStackScreens}
+                  component={ExpenseStackScreen}
                 />
               </>
             ) : (
-              <Stack.Screen
+              <RootStack.Screen
                 name="Login"
                 component={() => (
                   <LoginScreen login={() => setLoggedIn(true)} />
                 )}
               />
             )}
-          </Stack.Navigator>
+          </RootStack.Navigator>
         </NavigationContainer>
       </View>
     );

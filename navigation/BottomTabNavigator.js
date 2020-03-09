@@ -9,33 +9,28 @@ import ExpenseScreen from "../screens/ExpenseScreen";
 import SelectCategoryScreen from "../screens/SelectCategoryScreen";
 
 const BottomTab = createBottomTabNavigator();
-// const INITIAL_ROUTE_NAME = "Home";
 
 const HomeStack = createStackNavigator();
+const HomeStackScreen = () => (
+  <HomeStack.Navigator>
+    <HomeStack.Screen name="Home" component={HomeScreen} />
+    <HomeStack.Screen name="Expense" component={ExpenseScreen} />
+    <HomeStack.Screen name="SelectCategory" component={SelectCategoryScreen} />
+  </HomeStack.Navigator>
+);
+
 const ReportsStack = createStackNavigator();
+const ReportsStackScreen = () => (
+  <ReportsStack.Navigator>
+    <ReportsStack.Screen name="Reports" component={ReportsScreen} />
+  </ReportsStack.Navigator>
+);
 
 export default function BottomTabNavigator({ navigation, route }) {
   // Set the header title on the parent stack navigator depending on the
   // currently active tab. Learn more in the documentation:
   // https://reactnavigation.org/docs/en/screen-options-resolution.html
   //   navigation.setOptions({ headerTitle: getHeaderTitle(route) });
-
-  const HomeStackScreen = () => (
-    <HomeStack.Navigator>
-      <HomeStack.Screen name="Home" component={HomeScreen} />
-      <HomeStack.Screen name="Expense" component={ExpenseScreen} />
-      <HomeStack.Screen
-        name="SelectCategory"
-        component={SelectCategoryScreen}
-      />
-    </HomeStack.Navigator>
-  );
-
-  const ReportsStackScreen = () => (
-    <ReportsStack.Navigator>
-      <ReportsStack.Screen name="Reports" component={ReportsScreen} />
-    </ReportsStack.Navigator>
-  );
 
   return (
     <BottomTab.Navigator>

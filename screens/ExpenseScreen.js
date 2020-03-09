@@ -39,9 +39,6 @@ const AddExpense = ({ navigation, route }) => {
   const [photoUpdated, setPhotoUpdated] = useState(false);
 
   useLayoutEffect(() => {
-    console.log("layouteffect");
-    // console.log(route);
-    console.log(item);
     navigation.setOptions({
       headerTitle: item.id ? "Edit Expense" : "Add Expense",
       headerRight: () => <Button onPress={() => save()} title="Save" />,
