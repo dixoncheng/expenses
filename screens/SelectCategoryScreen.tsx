@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Navigation } from "../types";
 import {
   StyleSheet,
   FlatList,
@@ -10,10 +11,16 @@ import {
 
 import Categories from "../constants/Categories";
 
-const selectCategory = ({ navigation, route }) => {
+type CategoryItem = string;
+
+interface SelectCategoryProps extends Navigation {
+  route: any;
+}
+
+const selectCategory = ({ navigation, route }: SelectCategoryProps) => {
   const [selected, setSelected] = useState(route.params?.selected ?? null);
 
-  const onPress = item => {
+  const onPress = (item: CategoryItem) => {
     setSelected(item);
     route.params.setCategory(item);
     navigation.goBack();
@@ -23,7 +30,7 @@ const selectCategory = ({ navigation, route }) => {
     <View style={styles.container}>
       <FlatList
         data={Categories}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: CategoryItem }) => (
           <TouchableOpacity onPress={() => onPress(item)}>
             <View style={styles.item}>
               <Text style={{ fontSize: 18 }}>{item}</Text>
@@ -31,13 +38,13 @@ const selectCategory = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
         )}
-        keyExtractor={(item, index) => item}
+        keyExtractor={item => item}
       />
     </View>
   );
 };
 
-selectCategory["navigationOptions"] = ({ navigation }) => {
+selectCategory["navigationOptions"] = ({ navigation }: { navigation: any }) => {
   return {
     headerTitle: "Category",
     headerLeft: (

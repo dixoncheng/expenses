@@ -26,7 +26,7 @@ import {
 
 const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
-const ReportsScreen = ({ navigation }) => {
+const ReportsScreen = () => {
   const [dateFrom, setDateFrom] = useState(new Date());
   const [dateTo, setDateTo] = useState(new Date());
   const [showDateFrom, setShowDateFrom] = useState(false);
@@ -39,7 +39,7 @@ const ReportsScreen = ({ navigation }) => {
     selectDateTo(null, new Date());
   }, []);
 
-  const selectDateFrom = (event, newDate) => {
+  const selectDateFrom = (event: any, newDate: Date) => {
     if (newDate) {
       newDate.setHours(0, 0, 0);
       setDateFrom(newDate);
@@ -47,7 +47,7 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
-  const selectDateTo = (event, newDate) => {
+  const selectDateTo = (event: any, newDate: Date) => {
     if (newDate) {
       // set to last second on the day so the expenses from that day are included
       newDate.setHours(23, 59, 59);
@@ -72,19 +72,19 @@ const ReportsScreen = ({ navigation }) => {
         "fields.date[lte]": moment(dateTo).format(),
         order: "-fields.date"
       })
-      .then(response => response)
-      .catch(function(error) {
+      .then((response: any) => response)
+      .catch(function(error: any) {
         console.log(error);
       });
 
     if (result.total) {
-      let arr = result.items.map(item => {
+      let arr = result.items.map((item: any) => {
         const { amount, category, date, notes } = item.fields;
         return { amount, category, date, notes };
       });
 
       // generate csv
-      const report = this.generateReport(arr);
+      const report = generateReport(arr);
       const filename = `${FileSystem.documentDirectory}Expenses-${moment(
         dateFrom
       ).format("MMM-YY")}-${moment(dateTo).format("MMM-YY")}.xlsx`;
@@ -113,12 +113,12 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
-  generateReport = arr => {
+  const generateReport = (arr: ReadonlyArray<any>) => {
     let sheetHeadingsCounters = [];
     let data = [];
     let fmt = "$0.00";
     for (let i = 0; i < arr.length; i++) {
-      let c = sheetHeadingsCounters[arr[i].category] + 1 || 0;
+      let c: any = sheetHeadingsCounters[arr[i].category] + 1 || 0;
       let cell = {
         v: parseFloat(arr[i].amount || 0),
         z: fmt,
@@ -285,10 +285,6 @@ const ReportsScreen = ({ navigation }) => {
     </View>
   );
 };
-
-ReportsScreen["navigationOptions"] = () => ({
-  title: "Reports"
-});
 
 const styles = StyleSheet.create({
   container: {

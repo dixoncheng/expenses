@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { Navigation } from "../types";
 import {
   Platform,
   StyleSheet,
@@ -17,7 +18,6 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-// import * as Permissions from "expo-permissions";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
@@ -32,9 +32,17 @@ import {
   CONTENTFUL_ENVIRONMENT
 } from "react-native-dotenv";
 
-const AddExpense = ({ navigation, route }) => {
-  const [item, setItem] = useState(route.params?.item ?? {});
-  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+interface AddExpenseProps extends Navigation {
+  route: any;
+}
+
+const AddExpense = ({ navigation, route }: AddExpenseProps) => {
+  const cameraRef = useRef<Camera>(null);
+
+  const [item, setItem] = useState(route.params?.item || {});
+  const [hasCameraPermission, setHasCameraPermission] = useState<
+    boolean | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [photoUpdated, setPhotoUpdated] = useState(false);
 
@@ -65,15 +73,13 @@ const AddExpense = ({ navigation, route }) => {
 
   const save = () => {
     console.log(item);
-    setLoading(false);
-    return;
 
     try {
       // show loading spinner
       setLoading(true);
 
       // TODO upload photo
-      let newPhoto = {};
+      let newPhoto: any = {};
       if (photoUpdated) {
         // newPhoto = await uploadImageAsync(photo.uri);
       }
@@ -89,8 +95,8 @@ const AddExpense = ({ navigation, route }) => {
 
       client
         .getSpace(CONTENTFUL_SPACE_ID)
-        .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
-        .then(environment => {
+        .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+        .then((environment: any) => {
           const fields = {
             amount: { "en-US": parseFloat(item.amount) },
             notes: { "en-US": item.notes },
@@ -99,6 +105,7 @@ const AddExpense = ({ navigation, route }) => {
           };
 
           if (photoUpdated) {
+            // @ts-ignore
             fields.photo = {
               "en-US": {
                 sys: {
@@ -112,7 +119,7 @@ const AddExpense = ({ navigation, route }) => {
 
           if (item.id) {
             // update
-            return environment.getEntry(item.id).then(entry => {
+            return environment.getEntry(item.id).then((entry: any) => {
               entry.fields = { ...entry.fields, ...fields };
               return entry.update();
             });
@@ -123,7 +130,7 @@ const AddExpense = ({ navigation, route }) => {
             });
           }
         })
-        .then(entry => {
+        .then((entry: any) => {
           // console.log(entry);
           return entry.publish();
         })
@@ -131,7 +138,6 @@ const AddExpense = ({ navigation, route }) => {
         .then(() => {
           // back to list
           setLoading(false);
-          navigation.state.params.refresh();
 
           if (item.id) {
             // update
@@ -149,7 +155,7 @@ const AddExpense = ({ navigation, route }) => {
     }
   };
 
-  const uploadImageAsync = async uri => {
+  const uploadImageAsync = async (uri: string) => {
     // Why are we using XMLHttpRequest? See:
     // https://github.com/expo/expo/issues/2402#issuecomment-443726662
     const blob = await new Promise((resolve, reject) => {
@@ -193,23 +199,23 @@ const AddExpense = ({ navigation, route }) => {
 
     return client
       .getSpace(CONTENTFUL_SPACE_ID)
-      .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
-      .then(environment =>
+      .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+      .then((environment: any) =>
         environment.createAssetFromFiles({
           fields
         })
       )
-      .then(asset => {
+      .then((asset: any) => {
         // console.log("processing asset...");
         return asset.processForLocale("en-US", {
           processingCheckWait: 2000
         });
       })
-      .then(asset => {
+      .then((asset: any) => {
         // console.log("publishing asset...");
         return asset.publish();
       })
-      .then(asset => {
+      .then((asset: any) => {
         // console.log(asset);
         return asset;
       })
@@ -223,23 +229,24 @@ const AddExpense = ({ navigation, route }) => {
     });
   };
 
-  const setCategory = option => {
+  const setCategory = (option: string) => {
     setItem({ ...item, category: option });
   };
 
-  const setDate = (event, newDate) => {
+  const setDate = (event, newDate: Date) => {
     setItem({ ...item, date: newDate });
   };
 
   const takePhoto = async () => {
-    if (this.camera) {
+    if (cameraRef.current) {
       // let ratios = await camera.getSupportedRatiosAsync();
       // console.log(ratios);
 
       // let sizes = await camera.getAvailablePictureSizesAsync('4:3');
       // console.log(sizes);
 
-      let photo = await camera.takePictureAsync({
+      // @ts-ignore
+      let photo = await cameraRef.current.takePictureAsync({
         quality: Platform.OS === "ios" ? 0.3 : 0.5
         // base64: true
       });
@@ -259,7 +266,7 @@ const AddExpense = ({ navigation, route }) => {
       aspect: [4, 3]
     });
 
-    if (!result.cancelled) {
+    if (!photo.cancelled) {
       setPhotoUpdated(true);
       setItem({ ...item, photo });
     }
@@ -333,9 +340,7 @@ const AddExpense = ({ navigation, route }) => {
 
           {hasCameraPermission === true && !item.photo && (
             <Camera
-              ref={ref => {
-                camera = ref;
-              }}
+              ref={cameraRef}
               style={{ flex: 1 }}
               type="back"
               pictureSize={Platform.OS === "ios" ? "1920x1080" : "1600x1200"}

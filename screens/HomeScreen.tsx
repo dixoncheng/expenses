@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect } from "react";
+import { Navigation, ListItem } from "../types";
 import {
   FlatList,
   Button,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Alert
+  View
 } from "react-native";
 import moment from "moment";
 const { createClient } = require("contentful/dist/contentful.browser.min.js");
@@ -17,12 +17,8 @@ import {
   CONTENTFUL_CONTENT_TYPE
 } from "react-native-dotenv";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation }: Navigation) => {
   const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -51,9 +47,9 @@ const HomeScreen = ({ navigation }) => {
           "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
         order: "-fields.date"
       })
-      .then(response => {
+      .then((response: any) => {
         setItems(
-          response.items.map(item => {
+          response.items.map((item: any) => {
             // if (item.fields.photo) {
             //   console.log(item);
             // }
@@ -71,38 +67,35 @@ const HomeScreen = ({ navigation }) => {
           })
         );
       })
-      .catch(function(error) {
+      .catch(function(error: any) {
         console.log(error);
       });
   };
 
-  const onItemPress = item => {
-    // console.log("p");
+  const onItemPress = (item: ListItem) => {
     navigation.push("Expense", { item });
   };
 
-  const onItemLongPress = item => {
-    Alert.alert(
-      "Delete this item?",
-      `${item.category} $${parseFloat(item.amount || 0).toFixed(2)}`,
-      [
-        { text: "Yes", onPress: () => deleteItem(item) },
-        { text: "No", onPress: () => {}, style: "cancel" }
-      ]
-    );
-  };
-
-  const deleteItem = item => {};
-
-  // const handleLoadMore = () => {
-
+  // const onItemLongPress = (item: ListItem) => {
+  //   Alert.alert(
+  //     "Delete this item?",
+  //     `${item.category} $${parseFloat(item.amount || "0").toFixed(2)}`,
+  //     [
+  //       { text: "Yes", onPress: () => deleteItem(item) },
+  //       { text: "No", onPress: () => {}, style: "cancel" }
+  //     ]
+  //   );
   // };
+
+  // const deleteItem = (item: ListItem) => {};
+
+  fetchData();
 
   return (
     <View style={styles.container}>
       <FlatList
         data={items}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: ListItem }) => (
           <TouchableOpacity
             style={styles.item}
             onPress={() => onItemPress(item)}
