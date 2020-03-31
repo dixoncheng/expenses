@@ -71,8 +71,8 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
     })();
   }, []);
 
-  const save = () => {
-    console.log(item);
+  const save = async () => {
+    // console.log(item);
 
     try {
       // show loading spinner
@@ -81,7 +81,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       // TODO upload photo
       let newPhoto: any = {};
       if (photoUpdated) {
-        // newPhoto = await uploadImageAsync(photo.uri);
+        newPhoto = await uploadImageAsync(item.photo.uri);
       }
 
       // TODO delete existing linked image if available
@@ -138,14 +138,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
         .then(() => {
           // back to list
           setLoading(false);
-
-          if (item.id) {
-            // update
-            navigation.navigate("Home");
-          } else {
-            // create
-            navigation.navigate("TabNavigator");
-          }
+          navigation.navigate("Home");
         })
         .catch(console.error);
     } catch (error) {
@@ -233,7 +226,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
     setItem({ ...item, category: option });
   };
 
-  const setDate = (event, newDate: Date) => {
+  const setDate = (event: Event, newDate?: Date) => {
     setItem({ ...item, date: newDate });
   };
 
