@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { Navigation } from "../types";
 import {
   Platform,
   StyleSheet,
@@ -13,28 +14,38 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  Keyboard
+  Keyboard,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
-// import * as Permissions from "expo-permissions";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
+import moment from "moment";
+
 const {
-  createClient
+  createClient,
 } = require("contentful-management/dist/contentful-management.browser.min.js");
 
 import {
   CONTENTFUL_MANAGEMENT_TOKEN,
   CONTENTFUL_SPACE_ID,
   CONTENTFUL_CONTENT_TYPE,
-  CONTENTFUL_ENVIRONMENT
+  CONTENTFUL_ENVIRONMENT,
 } from "react-native-dotenv";
 
-const AddExpense = ({ navigation, route }) => {
-  const [item, setItem] = useState(route.params?.item ?? {});
-  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+interface AddExpenseProps extends Navigation {
+  route: any;
+}
+
+const AddExpense = ({ navigation, route }: AddExpenseProps) => {
+  const cameraRef = useRef<Camera>(null);
+
+  const [item, setItem] = useState<any>(route.params?.item || {});
+  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === "ios");
+
+  const [hasCameraPermission, setHasCameraPermission] = useState<
+    boolean | null
+  >(null);
   const [loading, setLoading] = useState(false);
   const [photoUpdated, setPhotoUpdated] = useState(false);
 
@@ -52,7 +63,7 @@ const AddExpense = ({ navigation, route }) => {
           }
           title={route.params?.item ? "Back" : "Cancel"}
         />
-      )
+      ),
     });
   }, [navigation, item]);
 
@@ -63,19 +74,17 @@ const AddExpense = ({ navigation, route }) => {
     })();
   }, []);
 
-  const save = () => {
-    console.log(item);
-    setLoading(false);
-    return;
+  const save = async () => {
+    // console.log(item);
 
     try {
       // show loading spinner
       setLoading(true);
 
       // TODO upload photo
-      let newPhoto = {};
+      let newPhoto: any = {};
       if (photoUpdated) {
-        // newPhoto = await uploadImageAsync(photo.uri);
+        newPhoto = await uploadImageAsync(item.photo.uri);
       }
 
       // TODO delete existing linked image if available
@@ -84,46 +93,47 @@ const AddExpense = ({ navigation, route }) => {
 
       // save to db
       const client = createClient({
-        accessToken: CONTENTFUL_MANAGEMENT_TOKEN
+        accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
       });
 
       client
         .getSpace(CONTENTFUL_SPACE_ID)
-        .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
-        .then(environment => {
+        .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+        .then((environment: any) => {
           const fields = {
             amount: { "en-US": parseFloat(item.amount) },
             notes: { "en-US": item.notes },
             date: { "en-US": item.date },
-            category: { "en-US": item.category }
+            category: { "en-US": item.category },
           };
 
           if (photoUpdated) {
+            // @ts-ignore
             fields.photo = {
               "en-US": {
                 sys: {
                   id: newPhoto.sys.id,
                   type: "Link",
-                  linkType: "Asset"
-                }
-              }
+                  linkType: "Asset",
+                },
+              },
             };
           }
 
           if (item.id) {
             // update
-            return environment.getEntry(item.id).then(entry => {
+            return environment.getEntry(item.id).then((entry: any) => {
               entry.fields = { ...entry.fields, ...fields };
               return entry.update();
             });
           } else {
             // create
             return environment.createEntry(CONTENTFUL_CONTENT_TYPE, {
-              fields
+              fields,
             });
           }
         })
-        .then(entry => {
+        .then((entry: any) => {
           // console.log(entry);
           return entry.publish();
         })
@@ -131,15 +141,7 @@ const AddExpense = ({ navigation, route }) => {
         .then(() => {
           // back to list
           setLoading(false);
-          navigation.state.params.refresh();
-
-          if (item.id) {
-            // update
-            navigation.navigate("Home");
-          } else {
-            // create
-            navigation.navigate("TabNavigator");
-          }
+          navigation.navigate("Home");
         })
         .catch(console.error);
     } catch (error) {
@@ -149,15 +151,15 @@ const AddExpense = ({ navigation, route }) => {
     }
   };
 
-  const uploadImageAsync = async uri => {
+  const uploadImageAsync = async (uri: string) => {
     // Why are we using XMLHttpRequest? See:
     // https://github.com/expo/expo/issues/2402#issuecomment-443726662
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.onload = function() {
+      xhr.onload = function () {
         resolve(xhr.response);
       };
-      xhr.onerror = function(e) {
+      xhr.onerror = function (e) {
         console.log(e);
         reject(new TypeError("Network request failed"));
       };
@@ -176,40 +178,40 @@ const AddExpense = ({ navigation, route }) => {
 
     let fields = {
       title: {
-        "en-US": fileName
+        "en-US": fileName,
       },
       file: {
         "en-US": {
           contentType,
           fileName,
-          file: blob
-        }
-      }
+          file: blob,
+        },
+      },
     };
 
     const client = createClient({
-      accessToken: CONTENTFUL_MANAGEMENT_TOKEN
+      accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
     });
 
     return client
       .getSpace(CONTENTFUL_SPACE_ID)
-      .then(space => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
-      .then(environment =>
+      .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+      .then((environment: any) =>
         environment.createAssetFromFiles({
-          fields
+          fields,
         })
       )
-      .then(asset => {
+      .then((asset: any) => {
         // console.log("processing asset...");
         return asset.processForLocale("en-US", {
-          processingCheckWait: 2000
+          processingCheckWait: 2000,
         });
       })
-      .then(asset => {
+      .then((asset: any) => {
         // console.log("publishing asset...");
         return asset.publish();
       })
-      .then(asset => {
+      .then((asset: any) => {
         // console.log(asset);
         return asset;
       })
@@ -219,28 +221,30 @@ const AddExpense = ({ navigation, route }) => {
   const selectCategory = () => {
     navigation.navigate("SelectCategory", {
       selected: item.category,
-      setCategory
+      setCategory,
     });
   };
 
-  const setCategory = option => {
+  const setCategory = (option: string) => {
     setItem({ ...item, category: option });
   };
 
-  const setDate = (event, newDate) => {
+  const setDate = (event: Event, newDate?: Date) => {
+    setShowDatePicker(false);
     setItem({ ...item, date: newDate });
   };
 
   const takePhoto = async () => {
-    if (this.camera) {
+    if (cameraRef.current) {
       // let ratios = await camera.getSupportedRatiosAsync();
       // console.log(ratios);
 
       // let sizes = await camera.getAvailablePictureSizesAsync('4:3');
       // console.log(sizes);
 
-      let photo = await camera.takePictureAsync({
-        quality: Platform.OS === "ios" ? 0.3 : 0.5
+      // @ts-ignore
+      let photo = await cameraRef.current.takePictureAsync({
+        quality: Platform.OS === "ios" ? 0.3 : 0.5,
         // base64: true
       });
       // console.log(photo);
@@ -256,10 +260,10 @@ const AddExpense = ({ navigation, route }) => {
   const pickPhoto = async () => {
     const photo = await ImagePicker.launchImageLibraryAsync({
       // allowsEditing: true,
-      aspect: [4, 3]
+      aspect: [4, 3],
     });
 
-    if (!result.cancelled) {
+    if (!photo.cancelled) {
       setPhotoUpdated(true);
       setItem({ ...item, photo });
     }
@@ -270,15 +274,11 @@ const AddExpense = ({ navigation, route }) => {
       <View style={styles.row}>
         <Text style={styles.label}>Amount</Text>
         <TextInput
-          style={{
-            fontSize: 18,
-            flex: 1,
-            textAlign: "right"
-          }}
+          style={styles.textField}
           keyboardType="decimal-pad"
           placeholder="0"
-          onChangeText={amount => {
-            setItem(item => ({ ...item, amount }));
+          onChangeText={(amount) => {
+            setItem((item) => ({ ...item, amount }));
           }}
           value={item.amount}
         />
@@ -287,45 +287,45 @@ const AddExpense = ({ navigation, route }) => {
       <TouchableHighlight onPress={selectCategory} underlayColor="lightgrey">
         <View style={styles.row}>
           <Text style={styles.label}>Category</Text>
-          <Text
-            style={{
-              fontSize: 18,
-              textAlign: "right"
-            }}
-          >
-            {item.category} ›
-          </Text>
+          <Text style={styles.textField}>{item.category} ›</Text>
         </View>
       </TouchableHighlight>
 
       <View style={styles.row}>
         <Text style={styles.label}>Notes</Text>
         <TextInput
-          style={{
-            fontSize: 18,
-            flex: 1,
-            textAlign: "right"
-          }}
-          // keyboardType="number-pad"
-          // placeholder="0"
-          onChangeText={notes => setItem({ ...item, notes })}
+          style={styles.textField}
+          onChangeText={(notes) => setItem({ ...item, notes })}
           value={item.notes}
         />
       </View>
 
-      <DateTimePicker
-        value={item.date || new Date()}
-        is24Hour={true}
-        display="default"
-        onChange={setDate}
-      />
+      {(showDatePicker || Platform.OS === "ios") && (
+        <DateTimePicker
+          value={item.date || new Date()}
+          is24Hour={true}
+          display="default"
+          onChange={setDate}
+        />
+      )}
+
+      {Platform.OS === "android" && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Date</Text>
+          <TouchableWithoutFeedback onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.textField}>
+              {moment(item.date || new Date()).format("D MMM YYYY")}
+            </Text>
+          </TouchableWithoutFeedback>
+        </View>
+      )}
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
           style={{
             flex: 1,
             backgroundColor: "transparent",
-            justifyContent: "flex-end"
+            justifyContent: "flex-end",
           }}
         >
           {hasCameraPermission === null ||
@@ -333,9 +333,7 @@ const AddExpense = ({ navigation, route }) => {
 
           {hasCameraPermission === true && !item.photo && (
             <Camera
-              ref={ref => {
-                camera = ref;
-              }}
+              ref={cameraRef}
               style={{ flex: 1 }}
               type="back"
               pictureSize={Platform.OS === "ios" ? "1920x1080" : "1600x1200"}
@@ -344,7 +342,7 @@ const AddExpense = ({ navigation, route }) => {
                 style={{
                   flex: 1,
                   backgroundColor: "transparent",
-                  justifyContent: "flex-end"
+                  justifyContent: "flex-end",
                 }}
               >
                 <View
@@ -353,7 +351,7 @@ const AddExpense = ({ navigation, route }) => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     paddingLeft: 10,
-                    paddingRight: 10
+                    paddingRight: 10,
                   }}
                 >
                   <View style={{ flex: 1 }}></View>
@@ -362,15 +360,11 @@ const AddExpense = ({ navigation, route }) => {
                     <Button title="Take photo" onPress={takePhoto} />
                   </View>
 
-                  <TouchableOpacity
-                    style={{ flex: 1 }}
-                    onPress={pickPhoto}
-                    style={{ flex: 1 }}
-                  >
+                  <TouchableOpacity style={{ flex: 1 }} onPress={pickPhoto}>
                     <Text
                       style={{
                         textAlign: "right",
-                        color: "white"
+                        color: "white",
                       }}
                     >
                       Gallery
@@ -387,7 +381,7 @@ const AddExpense = ({ navigation, route }) => {
               style={{
                 flex: 1,
                 width: "100%",
-                justifyContent: "flex-end"
+                justifyContent: "flex-end",
               }}
             >
               <Button title="Retake photo" onPress={retakePhoto} />
@@ -408,8 +402,8 @@ const AddExpense = ({ navigation, route }) => {
             {
               backgroundColor: "rgba(0,0,0,0.4)",
               alignItems: "center",
-              justifyContent: "center"
-            }
+              justifyContent: "center",
+            },
           ]}
         >
           <ActivityIndicator color="#fff" animating size="large" />
@@ -422,18 +416,23 @@ const AddExpense = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white"
+    backgroundColor: "white",
   },
   row: {
     flexDirection: "row",
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "lightgrey",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   label: {
-    fontSize: 18
-  }
+    fontSize: 18,
+  },
+  textField: {
+    fontSize: 18,
+    flex: 1,
+    textAlign: "right",
+  },
 });
 
 export default AddExpense;

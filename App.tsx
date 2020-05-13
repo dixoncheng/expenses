@@ -31,8 +31,6 @@ const ExpenseStackScreen = () => (
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
-  // const [initialNavigationState, setInitialNavigationState] = React.useState();
-
   const [isLoggedIn, setLoggedIn] = useState(false);
 
   // Load any resources or data that we need prior to rendering the app
@@ -43,11 +41,7 @@ export default function App(props) {
         if (value !== null) {
           setLoggedIn(true);
         }
-
         SplashScreen.preventAutoHide();
-
-        // Load our initial navigation state
-        // setInitialNavigationState(await getInitialState());
 
         // Load fonts
         await Font.loadAsync({

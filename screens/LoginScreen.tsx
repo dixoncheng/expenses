@@ -8,9 +8,8 @@ import {
   AsyncStorage
 } from "react-native";
 
-const LoginScreen = ({ login }) => {
+const LoginScreen = ({ login }: { login: Function }) => {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
 
   const validate = () => {
     if (password === PASSWORD) {
