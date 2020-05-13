@@ -14,22 +14,23 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Modal,
-  Keyboard
+  Keyboard,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
+import moment from "moment";
+
 const {
-  createClient
+  createClient,
 } = require("contentful-management/dist/contentful-management.browser.min.js");
 
 import {
   CONTENTFUL_MANAGEMENT_TOKEN,
   CONTENTFUL_SPACE_ID,
   CONTENTFUL_CONTENT_TYPE,
-  CONTENTFUL_ENVIRONMENT
+  CONTENTFUL_ENVIRONMENT,
 } from "react-native-dotenv";
 
 interface AddExpenseProps extends Navigation {
@@ -39,7 +40,9 @@ interface AddExpenseProps extends Navigation {
 const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const cameraRef = useRef<Camera>(null);
 
-  const [item, setItem] = useState(route.params?.item || {});
+  const [item, setItem] = useState<any>(route.params?.item || {});
+  const [showDatePicker, setShowDatePicker] = useState(Platform.OS === "ios");
+
   const [hasCameraPermission, setHasCameraPermission] = useState<
     boolean | null
   >(null);
@@ -60,7 +63,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
           }
           title={route.params?.item ? "Back" : "Cancel"}
         />
-      )
+      ),
     });
   }, [navigation, item]);
 
@@ -90,7 +93,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 
       // save to db
       const client = createClient({
-        accessToken: CONTENTFUL_MANAGEMENT_TOKEN
+        accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
       });
 
       client
@@ -101,7 +104,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
             amount: { "en-US": parseFloat(item.amount) },
             notes: { "en-US": item.notes },
             date: { "en-US": item.date },
-            category: { "en-US": item.category }
+            category: { "en-US": item.category },
           };
 
           if (photoUpdated) {
@@ -111,9 +114,9 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                 sys: {
                   id: newPhoto.sys.id,
                   type: "Link",
-                  linkType: "Asset"
-                }
-              }
+                  linkType: "Asset",
+                },
+              },
             };
           }
 
@@ -126,7 +129,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
           } else {
             // create
             return environment.createEntry(CONTENTFUL_CONTENT_TYPE, {
-              fields
+              fields,
             });
           }
         })
@@ -153,10 +156,10 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
     // https://github.com/expo/expo/issues/2402#issuecomment-443726662
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.onload = function() {
+      xhr.onload = function () {
         resolve(xhr.response);
       };
-      xhr.onerror = function(e) {
+      xhr.onerror = function (e) {
         console.log(e);
         reject(new TypeError("Network request failed"));
       };
@@ -175,19 +178,19 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 
     let fields = {
       title: {
-        "en-US": fileName
+        "en-US": fileName,
       },
       file: {
         "en-US": {
           contentType,
           fileName,
-          file: blob
-        }
-      }
+          file: blob,
+        },
+      },
     };
 
     const client = createClient({
-      accessToken: CONTENTFUL_MANAGEMENT_TOKEN
+      accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
     });
 
     return client
@@ -195,13 +198,13 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
       .then((environment: any) =>
         environment.createAssetFromFiles({
-          fields
+          fields,
         })
       )
       .then((asset: any) => {
         // console.log("processing asset...");
         return asset.processForLocale("en-US", {
-          processingCheckWait: 2000
+          processingCheckWait: 2000,
         });
       })
       .then((asset: any) => {
@@ -218,7 +221,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const selectCategory = () => {
     navigation.navigate("SelectCategory", {
       selected: item.category,
-      setCategory
+      setCategory,
     });
   };
 
@@ -227,6 +230,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   };
 
   const setDate = (event: Event, newDate?: Date) => {
+    setShowDatePicker(false);
     setItem({ ...item, date: newDate });
   };
 
@@ -240,7 +244,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 
       // @ts-ignore
       let photo = await cameraRef.current.takePictureAsync({
-        quality: Platform.OS === "ios" ? 0.3 : 0.5
+        quality: Platform.OS === "ios" ? 0.3 : 0.5,
         // base64: true
       });
       // console.log(photo);
@@ -256,7 +260,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const pickPhoto = async () => {
     const photo = await ImagePicker.launchImageLibraryAsync({
       // allowsEditing: true,
-      aspect: [4, 3]
+      aspect: [4, 3],
     });
 
     if (!photo.cancelled) {
@@ -270,15 +274,11 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       <View style={styles.row}>
         <Text style={styles.label}>Amount</Text>
         <TextInput
-          style={{
-            fontSize: 18,
-            flex: 1,
-            textAlign: "right"
-          }}
+          style={styles.textField}
           keyboardType="decimal-pad"
           placeholder="0"
-          onChangeText={amount => {
-            setItem(item => ({ ...item, amount }));
+          onChangeText={(amount) => {
+            setItem((item) => ({ ...item, amount }));
           }}
           value={item.amount}
         />
@@ -287,45 +287,45 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       <TouchableHighlight onPress={selectCategory} underlayColor="lightgrey">
         <View style={styles.row}>
           <Text style={styles.label}>Category</Text>
-          <Text
-            style={{
-              fontSize: 18,
-              textAlign: "right"
-            }}
-          >
-            {item.category} ›
-          </Text>
+          <Text style={styles.textField}>{item.category} ›</Text>
         </View>
       </TouchableHighlight>
 
       <View style={styles.row}>
         <Text style={styles.label}>Notes</Text>
         <TextInput
-          style={{
-            fontSize: 18,
-            flex: 1,
-            textAlign: "right"
-          }}
-          // keyboardType="number-pad"
-          // placeholder="0"
-          onChangeText={notes => setItem({ ...item, notes })}
+          style={styles.textField}
+          onChangeText={(notes) => setItem({ ...item, notes })}
           value={item.notes}
         />
       </View>
 
-      <DateTimePicker
-        value={item.date || new Date()}
-        is24Hour={true}
-        display="default"
-        onChange={setDate}
-      />
+      {(showDatePicker || Platform.OS === "ios") && (
+        <DateTimePicker
+          value={item.date || new Date()}
+          is24Hour={true}
+          display="default"
+          onChange={setDate}
+        />
+      )}
+
+      {Platform.OS === "android" && (
+        <View style={styles.row}>
+          <Text style={styles.label}>Date</Text>
+          <TouchableWithoutFeedback onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.textField}>
+              {moment(item.date || new Date()).format("D MMM YYYY")}
+            </Text>
+          </TouchableWithoutFeedback>
+        </View>
+      )}
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
           style={{
             flex: 1,
             backgroundColor: "transparent",
-            justifyContent: "flex-end"
+            justifyContent: "flex-end",
           }}
         >
           {hasCameraPermission === null ||
@@ -342,7 +342,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                 style={{
                   flex: 1,
                   backgroundColor: "transparent",
-                  justifyContent: "flex-end"
+                  justifyContent: "flex-end",
                 }}
               >
                 <View
@@ -351,7 +351,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     paddingLeft: 10,
-                    paddingRight: 10
+                    paddingRight: 10,
                   }}
                 >
                   <View style={{ flex: 1 }}></View>
@@ -360,15 +360,11 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                     <Button title="Take photo" onPress={takePhoto} />
                   </View>
 
-                  <TouchableOpacity
-                    style={{ flex: 1 }}
-                    onPress={pickPhoto}
-                    style={{ flex: 1 }}
-                  >
+                  <TouchableOpacity style={{ flex: 1 }} onPress={pickPhoto}>
                     <Text
                       style={{
                         textAlign: "right",
-                        color: "white"
+                        color: "white",
                       }}
                     >
                       Gallery
@@ -385,7 +381,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
               style={{
                 flex: 1,
                 width: "100%",
-                justifyContent: "flex-end"
+                justifyContent: "flex-end",
               }}
             >
               <Button title="Retake photo" onPress={retakePhoto} />
@@ -406,8 +402,8 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
             {
               backgroundColor: "rgba(0,0,0,0.4)",
               alignItems: "center",
-              justifyContent: "center"
-            }
+              justifyContent: "center",
+            },
           ]}
         >
           <ActivityIndicator color="#fff" animating size="large" />
@@ -420,18 +416,23 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white"
+    backgroundColor: "white",
   },
   row: {
     flexDirection: "row",
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "lightgrey",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   label: {
-    fontSize: 18
-  }
+    fontSize: 18,
+  },
+  textField: {
+    fontSize: 18,
+    flex: 1,
+    textAlign: "right",
+  },
 });
 
 export default AddExpense;
