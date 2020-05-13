@@ -1,15 +1,11 @@
 {
   "expo": {
-    "name": "expenses",
-    "description": "A very interesting project.",
-    "slug": "expenses1103335",
-    "privacy": "unlisted",
-    "sdkVersion": "35.0.0",
-    "platforms": [
-      "ios",
-      "android"
-    ],
-    "version": "1.0.0",
+    "name": "Expenses",
+    "slug": "expo-new",
+    "privacy": "public",
+    "sdkVersion": "36.0.0",
+    "platforms": ["ios", "android", "web"],
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "splash": {
@@ -20,15 +16,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "com.macaroni.expenses",
       "supportsTablet": true
-    },
-    "android": {
-      "package": "com.macaroni.expenses"
     }
   }
 }
