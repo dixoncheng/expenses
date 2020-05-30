@@ -1,44 +1,64 @@
-import React, { useState } from "react";
-import { PASSWORD } from "react-native-dotenv";
-import {
-  Button,
-  StyleSheet,
-  SafeAreaView,
-  TextInput,
-  AsyncStorage
-} from "react-native";
+import React, { useEffect } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
+import { Button, StyleSheet, SafeAreaView, AsyncStorage } from "react-native";
+import { CONTENTFUL_CLIENT_ID } from "react-native-dotenv";
+import contentful from "../constants/contentful";
+
+WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = ({ login }: { login: Function }) => {
-  const [password, setPassword] = useState("");
+  const useProxy = true;
 
-  const validate = () => {
-    if (password === PASSWORD) {
-      storeData();
-      login();
-    } else {
-      alert("Password incorrect");
-    }
+  const discovery = {
+    authorizationEndpoint: contentful.authorizationEndpoint,
   };
 
-  const storeData = async () => {
+  const redirectUri = makeRedirectUri({
+    native: "expenses://redirect",
+    useProxy,
+  });
+
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: CONTENTFUL_CLIENT_ID,
+      scopes: ["content_management_read", "content_management_manage"],
+      // scopes: ["content_management_read"],
+      responseType: "token",
+      redirectUri,
+    },
+    discovery
+  );
+
+  useEffect(() => {
+    if (response && response.type === "success") {
+      console.log(response);
+      saveToken(response.params.access_token);
+    }
+  }, [response]);
+
+  const saveToken = async (accessToken: string) => {
     try {
-      await AsyncStorage.setItem("expensesLoggedIn", "1");
+      await AsyncStorage.setItem("accessToken", accessToken);
+      login();
     } catch (error) {
       // Error saving data
+      alert("Login error");
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <TextInput
-        value={password}
-        onChangeText={password => setPassword(password)}
-        placeholder="password"
-        secureTextEntry={true}
-        style={styles.input}
-        onSubmitEditing={validate}
+      <Button
+        disabled={!request}
+        onPress={() =>
+          promptAsync({
+            useProxy,
+            redirectUri,
+          })
+        }
+        title="Login with Contentful"
       />
-      <Button onPress={validate} title="Login" />
     </SafeAreaView>
   );
 };
@@ -49,17 +69,8 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
-  input: {
-    // borderColor: 'red',
-    width: 200,
-    fontSize: 20,
-    height: 44,
-    padding: 10,
-    borderWidth: 1,
-    marginVertical: 10
-  }
 });
 
 export default LoginScreen;

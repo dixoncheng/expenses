@@ -21,17 +21,12 @@ import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
 import moment from "moment";
+import { CONTENTFUL_MANAGEMENT_TOKEN } from "react-native-dotenv";
+import contentful from "../constants/contentful";
 
 const {
   createClient,
 } = require("contentful-management/dist/contentful-management.browser.min.js");
-
-import {
-  CONTENTFUL_MANAGEMENT_TOKEN,
-  CONTENTFUL_SPACE_ID,
-  CONTENTFUL_CONTENT_TYPE,
-  CONTENTFUL_ENVIRONMENT,
-} from "react-native-dotenv";
 
 interface AddExpenseProps extends Navigation {
   route: any;
@@ -97,8 +92,8 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       });
 
       client
-        .getSpace(CONTENTFUL_SPACE_ID)
-        .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+        .getSpace(contentful.spaceId)
+        .then((space: any) => space.getEnvironment(contentful.env))
         .then((environment: any) => {
           const fields = {
             amount: { "en-US": parseFloat(item.amount) },
@@ -128,7 +123,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
             });
           } else {
             // create
-            return environment.createEntry(CONTENTFUL_CONTENT_TYPE, {
+            return environment.createEntry(contentful.contentType, {
               fields,
             });
           }
@@ -194,8 +189,8 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
     });
 
     return client
-      .getSpace(CONTENTFUL_SPACE_ID)
-      .then((space: any) => space.getEnvironment(CONTENTFUL_ENVIRONMENT))
+      .getSpace(contentful.spaceId)
+      .then((space: any) => space.getEnvironment(contentful.env))
       .then((environment: any) =>
         environment.createAssetFromFiles({
           fields,

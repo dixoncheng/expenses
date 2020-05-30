@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { Navigation, ListItem } from "../types";
 import {
   FlatList,
@@ -6,16 +6,15 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
+  AsyncStorage,
 } from "react-native";
 import moment from "moment";
-const { createClient } = require("contentful/dist/contentful.browser.min.js");
+import contentful from "../constants/contentful";
 
-import {
-  CONTENTFUL_DELIVERY_TOKEN,
-  CONTENTFUL_SPACE_ID,
-  CONTENTFUL_CONTENT_TYPE
-} from "react-native-dotenv";
+import { CONTENTFUL_DELIVERY_TOKEN } from "react-native-dotenv";
+
+const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
 const HomeScreen = ({ navigation }: Navigation) => {
   const [items, setItems] = useState([]);
@@ -23,6 +22,14 @@ const HomeScreen = ({ navigation }: Navigation) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: "Expenses",
+      headerLeft: () => (
+        <Button
+          onPress={() => {
+            AsyncStorage.removeItem("accessToken");
+          }}
+          title="Logout"
+        />
+      ),
       headerRight: () => (
         <Button
           onPress={() => {
@@ -30,22 +37,29 @@ const HomeScreen = ({ navigation }: Navigation) => {
           }}
           title="Add"
         />
-      )
+      ),
     });
   }, [navigation]);
 
-  const fetchData = () => {
+  const fetchData = async () => {
     // console.log("fetch");
+
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    console.log(accessToken);
+
     const client = createClient({
-      accessToken: CONTENTFUL_DELIVERY_TOKEN,
-      space: CONTENTFUL_SPACE_ID
+      accessToken,
+      // accessToken: CONTENTFUL_DELIVERY_TOKEN,
+      // accessToken: "kZP0L6Z7qAwIiyYXI99q0JOcP6iGerWWllza2xrG9Pk----",
+      // accessToken: "dmYOsA_UYGcgn-KHMnkK-o88eggaic5-0uPbLqpAVIs",
+      space: contentful.spaceId,
     });
     client
       .getEntries({
-        content_type: CONTENTFUL_CONTENT_TYPE,
+        content_type: contentful.contentType,
         select:
           "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
-        order: "-fields.date"
+        order: "-fields.date",
       })
       .then((response: any) => {
         setItems(
@@ -62,15 +76,19 @@ const HomeScreen = ({ navigation }: Navigation) => {
               date: new Date(item.fields.date),
               amount: item.fields.amount + "",
               category: item.fields.category,
-              notes: item.fields.notes
+              notes: item.fields.notes,
             };
           })
         );
       })
-      .catch(function(error: any) {
+      .catch(function (error: any) {
         console.log(error);
       });
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const onItemPress = (item: ListItem) => {
     navigation.push("Expense", { item });
@@ -88,8 +106,6 @@ const HomeScreen = ({ navigation }: Navigation) => {
   // };
 
   // const deleteItem = (item: ListItem) => {};
-
-  fetchData();
 
   return (
     <View style={styles.container}>
@@ -129,11 +145,11 @@ const HomeScreen = ({ navigation }: Navigation) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   item: {
-    padding: 10
-  }
+    padding: 10,
+  },
 });
 
 export default HomeScreen;

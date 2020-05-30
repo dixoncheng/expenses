@@ -4,7 +4,7 @@ import {
   StatusBar,
   StyleSheet,
   View,
-  AsyncStorage
+  AsyncStorage,
 } from "react-native";
 import { SplashScreen } from "expo";
 import * as Font from "expo-font";
@@ -37,15 +37,15 @@ export default function App(props) {
   useEffect(() => {
     async function loadResourcesAndDataAsync() {
       try {
-        const value = await AsyncStorage.getItem("expensesLoggedIn");
-        if (value !== null) {
+        const accessToken = await AsyncStorage.getItem("accessToken");
+        if (accessToken !== null) {
           setLoggedIn(true);
         }
         SplashScreen.preventAutoHide();
 
         // Load fonts
         await Font.loadAsync({
-          ...Ionicons.font
+          ...Ionicons.font,
         });
       } catch (e) {
         // We might want to provide this error information to an error reporting service
@@ -94,6 +94,6 @@ export default function App(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff"
-  }
+    backgroundColor: "#fff",
+  },
 });

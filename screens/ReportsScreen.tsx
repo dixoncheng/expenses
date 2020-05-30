@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   TouchableHighlight,
-  Alert
+  Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system";
@@ -17,12 +17,9 @@ import moment from "moment";
 import XLSX from "xlsx";
 
 import Categories from "../constants/Categories";
+import contentful from "../constants/contentful";
 
-import {
-  CONTENTFUL_DELIVERY_TOKEN,
-  CONTENTFUL_SPACE_ID,
-  CONTENTFUL_CONTENT_TYPE
-} from "react-native-dotenv";
+import { CONTENTFUL_DELIVERY_TOKEN } from "react-native-dotenv";
 
 const { createClient } = require("contentful/dist/contentful.browser.min.js");
 
@@ -61,19 +58,19 @@ const ReportsScreen = () => {
     setLoading(true);
     const client = createClient({
       accessToken: CONTENTFUL_DELIVERY_TOKEN,
-      space: CONTENTFUL_SPACE_ID
+      space: contentful.spaceId,
     });
     const result = await client
       .getEntries({
-        content_type: CONTENTFUL_CONTENT_TYPE,
+        content_type: contentful.contentType,
         select:
           "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
         "fields.date[gte]": moment(dateFrom).format(),
         "fields.date[lte]": moment(dateTo).format(),
-        order: "-fields.date"
+        order: "-fields.date",
       })
       .then((response: any) => response)
-      .catch(function(error: any) {
+      .catch(function (error: any) {
         console.log(error);
       });
 
@@ -90,7 +87,7 @@ const ReportsScreen = () => {
       ).format("MMM-YY")}-${moment(dateTo).format("MMM-YY")}.xlsx`;
 
       await FileSystem.writeAsStringAsync(filename, report, {
-        encoding: FileSystem.EncodingType.Base64
+        encoding: FileSystem.EncodingType.Base64,
       });
 
       setLoading(false);
@@ -101,7 +98,7 @@ const ReportsScreen = () => {
         subject: `Expense report ${moment(dateFrom).format(
           "MMM YY"
         )} - ${moment(dateTo).format("MMM YY")}`,
-        attachments: [filename]
+        attachments: [filename],
       });
     } else {
       setShowingModal(false);
@@ -123,7 +120,7 @@ const ReportsScreen = () => {
         v: parseFloat(arr[i].amount || 0),
         z: fmt,
         c: arr[i].notes ? [{ t: arr[i].notes }] : null,
-        t: "n"
+        t: "n",
       };
       if (cell.c) {
         cell.c.hidden = true;
@@ -154,10 +151,10 @@ const ReportsScreen = () => {
       row[Categories[i]] = {
         f: `SUM(${XLSX.utils.encode_cell({
           r: 1,
-          c: i
+          c: i,
         })}:${XLSX.utils.encode_cell({ r: data.length, c: i })})`,
         z: fmt,
-        t: "n"
+        t: "n",
       };
     }
     data.push(row);
@@ -190,7 +187,7 @@ const ReportsScreen = () => {
             onChange={selectDateFrom}
             style={{
               borderBottomWidth: 1,
-              borderBottomColor: "lightgrey"
+              borderBottomColor: "lightgrey",
             }}
           />
           <Text style={styles.label}>To</Text>
@@ -201,7 +198,7 @@ const ReportsScreen = () => {
             onChange={selectDateTo}
             style={{
               borderBottomWidth: 1,
-              borderBottomColor: "lightgrey"
+              borderBottomColor: "lightgrey",
             }}
           />
         </View>
@@ -229,7 +226,7 @@ const ReportsScreen = () => {
               onChange={selectDateFrom}
               style={{
                 borderBottomWidth: 1,
-                borderBottomColor: "lightgrey"
+                borderBottomColor: "lightgrey",
               }}
             />
           )}
@@ -254,7 +251,7 @@ const ReportsScreen = () => {
               onChange={selectDateTo}
               style={{
                 borderBottomWidth: 1,
-                borderBottomColor: "lightgrey"
+                borderBottomColor: "lightgrey",
               }}
             />
           )}
@@ -275,8 +272,8 @@ const ReportsScreen = () => {
             {
               backgroundColor: "rgba(0,0,0,0.4)",
               alignItems: "center",
-              justifyContent: "center"
-            }
+              justifyContent: "center",
+            },
           ]}
         >
           {loading && <ActivityIndicator color="#fff" animating size="large" />}
@@ -289,7 +286,7 @@ const ReportsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white"
+    backgroundColor: "white",
   },
   row: {
     // flex: 1,
@@ -298,13 +295,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "lightgrey",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   label: {
     marginTop: 10,
     fontSize: 18,
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
 });
 
 export default ReportsScreen;
