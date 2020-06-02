@@ -9,6 +9,7 @@ import {
   Modal,
   TouchableHighlight,
   Alert,
+  AsyncStorage,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system";
@@ -19,9 +20,9 @@ import XLSX from "xlsx";
 import Categories from "../constants/Categories";
 import contentful from "../constants/contentful";
 
-import { CONTENTFUL_DELIVERY_TOKEN } from "react-native-dotenv";
-
-const { createClient } = require("contentful/dist/contentful.browser.min.js");
+const {
+  createClient,
+} = require("contentful-management/dist/contentful-management.browser.min.js");
 
 const ReportsScreen = () => {
   const [dateFrom, setDateFrom] = useState(new Date());
@@ -39,8 +40,8 @@ const ReportsScreen = () => {
   const selectDateFrom = (event: any, newDate: Date) => {
     if (newDate) {
       newDate.setHours(0, 0, 0);
-      setDateFrom(newDate);
       setShowDateFrom(false);
+      setDateFrom(newDate);
     }
   };
 
@@ -48,37 +49,49 @@ const ReportsScreen = () => {
     if (newDate) {
       // set to last second on the day so the expenses from that day are included
       newDate.setHours(23, 59, 59);
-      setDateTo(newDate);
       setShowDateTo(false);
+      setDateTo(newDate);
     }
   };
 
   const onGenerate = async () => {
     setShowingModal(true);
     setLoading(true);
+    const accessToken = await AsyncStorage.getItem("accessToken");
     const client = createClient({
-      accessToken: CONTENTFUL_DELIVERY_TOKEN,
-      space: contentful.spaceId,
+      accessToken,
     });
     const result = await client
-      .getEntries({
-        content_type: contentful.contentType,
-        select:
-          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
-        "fields.date[gte]": moment(dateFrom).format(),
-        "fields.date[lte]": moment(dateTo).format(),
-        order: "-fields.date",
-      })
-      .then((response: any) => response)
-      .catch(function (error: any) {
-        console.log(error);
-      });
+      .getSpace(contentful.spaceId)
+      .then((space: any) => space.getEnvironment(contentful.env))
+      .then((environment: any) =>
+        environment
+          .getEntries({
+            content_type: contentful.contentType,
+            select:
+              "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
+            "fields.date[gte]": moment(dateFrom).format(),
+            "fields.date[lte]": moment(dateTo).format(),
+            order: "-fields.date",
+          })
+          .then((response: any) => response)
+          .catch(function (error: any) {
+            console.log(error);
+          })
+      );
 
+    // console.log(result);
     if (result.total) {
-      let arr = result.items.map((item: any) => {
-        const { amount, category, date, notes } = item.fields;
-        return { amount, category, date, notes };
-      });
+      let arr = result.items.map(
+        ({ fields: { date, amount, category, notes } }) => {
+          return {
+            date: date && new Date(date["en-US"]),
+            amount: amount && amount["en-US"] + "",
+            category: category && category["en-US"],
+            notes: notes && notes["en-US"],
+          };
+        }
+      );
 
       // generate csv
       const report = generateReport(arr);
@@ -207,7 +220,7 @@ const ReportsScreen = () => {
       {Platform.OS !== "ios" && (
         <View>
           <TouchableHighlight
-            onPress={() => setShowingModal(true)}
+            onPress={() => setShowDateFrom(true)}
             underlayColor="lightgrey"
           >
             <View style={styles.row}>

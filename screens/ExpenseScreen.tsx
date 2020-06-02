@@ -15,13 +15,13 @@ import {
   ActivityIndicator,
   Modal,
   Keyboard,
+  AsyncStorage,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 
 import moment from "moment";
-import { CONTENTFUL_MANAGEMENT_TOKEN } from "react-native-dotenv";
 import contentful from "../constants/contentful";
 
 const {
@@ -44,10 +44,15 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const [loading, setLoading] = useState(false);
   const [photoUpdated, setPhotoUpdated] = useState(false);
 
+  const [loadedPhoto, setLoadedPhoto] = useState(null);
+
+  const [client, setClient] = useState(null);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: item.id ? "Edit Expense" : "Add Expense",
-      headerRight: () => <Button onPress={() => save()} title="Save" />,
+      headerRight: () =>
+        client && <Button onPress={() => save()} title="Save" />,
       headerLeft: () => (
         <Button
           onPress={() =>
@@ -66,7 +71,29 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
     (async () => {
       const { status } = await Camera.requestPermissionsAsync();
       setHasCameraPermission(status === "granted");
+
+      const accessToken = await AsyncStorage.getItem("accessToken");
+      const contentfulClient = createClient({
+        accessToken,
+      });
+      setClient(contentfulClient);
+
+      if (item.photo) {
+        // get asset from contentful
+        contentfulClient
+          .getSpace(contentful.spaceId)
+          .then((space: any) => space.getEnvironment(contentful.env))
+          .then((environment: any) => environment.getAsset(item.photo))
+          .then((asset: any) => {
+            setLoadedPhoto(asset.fields.file["en-US"].url);
+          })
+          .catch(console.error);
+      }
     })();
+
+    if (!item.date) {
+      setItem({ ...item, date: new Date() });
+    }
   }, []);
 
   const save = async () => {
@@ -87,10 +114,6 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       // }
 
       // save to db
-      const client = createClient({
-        accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
-      });
-
       client
         .getSpace(contentful.spaceId)
         .then((space: any) => space.getEnvironment(contentful.env))
@@ -136,7 +159,9 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
         .then(() => {
           // back to list
           setLoading(false);
-          navigation.navigate("Home");
+
+          // TODO set home to reload
+          navigation.navigate("Home", { refresh: true });
         })
         .catch(console.error);
     } catch (error) {
@@ -183,10 +208,6 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
         },
       },
     };
-
-    const client = createClient({
-      accessToken: CONTENTFUL_MANAGEMENT_TOKEN,
-    });
 
     return client
       .getSpace(contentful.spaceId)
@@ -250,6 +271,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 
   const retakePhoto = () => {
     setItem({ ...item, photo: null });
+    setLoadedPhoto(null);
   };
 
   const pickPhoto = async () => {
@@ -370,9 +392,11 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
             </Camera>
           )}
 
-          {item.photo ? (
+          {item.photo?.uri || loadedPhoto ? (
             <ImageBackground
-              source={item.photo.uri ? item.photo : { uri: item.photo }}
+              source={
+                item?.photo?.uri ? item.photo : { uri: `https:${loadedPhoto}` }
+              }
               style={{
                 flex: 1,
                 width: "100%",

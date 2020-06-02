@@ -12,11 +12,15 @@ import {
 import moment from "moment";
 import contentful from "../constants/contentful";
 
-import { CONTENTFUL_DELIVERY_TOKEN } from "react-native-dotenv";
+const {
+  createClient,
+} = require("contentful-management/dist/contentful-management.browser.min.js");
 
-const { createClient } = require("contentful/dist/contentful.browser.min.js");
+interface HomeScreenProps extends Navigation {
+  route: any;
+}
 
-const HomeScreen = ({ navigation }: Navigation) => {
+const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   const [items, setItems] = useState([]);
 
   useLayoutEffect(() => {
@@ -42,43 +46,43 @@ const HomeScreen = ({ navigation }: Navigation) => {
   }, [navigation]);
 
   const fetchData = async () => {
-    // console.log("fetch");
-
     const accessToken = await AsyncStorage.getItem("accessToken");
-    console.log(accessToken);
-
     const client = createClient({
       accessToken,
-      // accessToken: CONTENTFUL_DELIVERY_TOKEN,
-      // accessToken: "kZP0L6Z7qAwIiyYXI99q0JOcP6iGerWWllza2xrG9Pk----",
-      // accessToken: "dmYOsA_UYGcgn-KHMnkK-o88eggaic5-0uPbLqpAVIs",
-      space: contentful.spaceId,
     });
     client
-      .getEntries({
-        content_type: contentful.contentType,
-        select:
-          "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
-        order: "-fields.date",
-      })
+      .getSpace(contentful.spaceId)
+      .then((space: any) => space.getEnvironment(contentful.env))
+      .then((environment: any) =>
+        environment.getEntries({
+          content_type: contentful.contentType,
+          select:
+            "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
+          order: "-fields.date",
+        })
+      )
       .then((response: any) => {
+        // console.log(response);
         setItems(
-          response.items.map((item: any) => {
-            // if (item.fields.photo) {
-            //   console.log(item);
-            // }
-            return {
-              id: item.sys.id,
-              photo:
-                item.fields.photo && item.fields.photo.fields.file
-                  ? `https:${item.fields.photo.fields.file.url}`
-                  : null,
-              date: new Date(item.fields.date),
-              amount: item.fields.amount + "",
-              category: item.fields.category,
-              notes: item.fields.notes,
-            };
-          })
+          response.items.map(
+            ({ sys, fields: { photo, date, amount, category, notes } }) => {
+              // if (item.fields.photo) {
+              //   console.log(item);
+              // }
+              return {
+                id: sys.id,
+                // photo:
+                //   item.fields.photo && item.fields.photo.fields.file
+                //     ? `https:${item.fields.photo.fields.file.url}`
+                //     : null,
+                photo: photo && photo["en-US"].sys.id,
+                date: date && new Date(date["en-US"]),
+                amount: amount && amount["en-US"] + "",
+                category: category && category["en-US"],
+                notes: notes && notes["en-US"],
+              };
+            }
+          )
         );
       })
       .catch(function (error: any) {
@@ -89,6 +93,10 @@ const HomeScreen = ({ navigation }: Navigation) => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  if (route.params?.refresh) {
+    fetchData();
+  }
 
   const onItemPress = (item: ListItem) => {
     navigation.push("Expense", { item });
@@ -106,6 +114,8 @@ const HomeScreen = ({ navigation }: Navigation) => {
   // };
 
   // const deleteItem = (item: ListItem) => {};
+
+  // console.log(items);
 
   return (
     <View style={styles.container}>

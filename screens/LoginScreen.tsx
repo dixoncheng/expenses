@@ -23,7 +23,6 @@ const LoginScreen = ({ login }: { login: Function }) => {
     {
       clientId: CONTENTFUL_CLIENT_ID,
       scopes: ["content_management_read", "content_management_manage"],
-      // scopes: ["content_management_read"],
       responseType: "token",
       redirectUri,
     },
