@@ -1,46 +1,21 @@
 import React, { useState, useEffect } from "react";
-import {
-  Platform,
-  StatusBar,
-  StyleSheet,
-  View,
-  AsyncStorage,
-} from "react-native";
+import { Platform, StatusBar } from "react-native";
 import { SplashScreen } from "expo";
 import * as Font from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import BottomTabNavigator from "./navigation/BottomTabNavigator";
-import ExpenseScreen from "./screens/ExpenseScreen";
-import SelectCategoryScreen from "./screens/SelectCategoryScreen";
-import LoginScreen from "./screens/LoginScreen";
 
-const RootStack = createStackNavigator();
+import { Provider } from "react-redux";
 
-const ExpenseStack = createStackNavigator();
-const ExpenseStackScreen = () => (
-  <ExpenseStack.Navigator>
-    <ExpenseStack.Screen name="AddExpense" component={ExpenseScreen} />
-    <ExpenseStack.Screen
-      name="SelectCategory"
-      component={SelectCategoryScreen}
-    />
-  </ExpenseStack.Navigator>
-);
+import store from "./store";
+import NavContainer from "./navigation/NavContainer";
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
-  const [isLoggedIn, setLoggedIn] = useState(false);
 
   // Load any resources or data that we need prior to rendering the app
   useEffect(() => {
     async function loadResourcesAndDataAsync() {
       try {
-        const accessToken = await AsyncStorage.getItem("accessToken");
-        if (accessToken !== null) {
-          setLoggedIn(true);
-        }
         SplashScreen.preventAutoHide();
 
         // Load fonts
@@ -63,37 +38,10 @@ export default function App(props) {
     return null;
   } else {
     return (
-      <View style={styles.container}>
+      <Provider store={store}>
         {Platform.OS === "ios" && <StatusBar barStyle="default" />}
-
-        <NavigationContainer>
-          <RootStack.Navigator headerMode="none" mode="modal">
-            {isLoggedIn ? (
-              <>
-                <RootStack.Screen name="Root" component={BottomTabNavigator} />
-                <RootStack.Screen
-                  name="AddExpense"
-                  component={ExpenseStackScreen}
-                />
-              </>
-            ) : (
-              <RootStack.Screen
-                name="Login"
-                component={() => (
-                  <LoginScreen login={() => setLoggedIn(true)} />
-                )}
-              />
-            )}
-          </RootStack.Navigator>
-        </NavigationContainer>
-      </View>
+        <NavContainer />
+      </Provider>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});

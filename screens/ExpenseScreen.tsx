@@ -34,16 +34,13 @@ interface AddExpenseProps extends Navigation {
 
 const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const cameraRef = useRef<Camera>(null);
-
   const [item, setItem] = useState<any>(route.params?.item || {});
   const [showDatePicker, setShowDatePicker] = useState(Platform.OS === "ios");
-
   const [hasCameraPermission, setHasCameraPermission] = useState<
     boolean | null
   >(null);
   const [loading, setLoading] = useState(false);
   const [photoUpdated, setPhotoUpdated] = useState(false);
-
   const [loadedPhoto, setLoadedPhoto] = useState(null);
 
   const [client, setClient] = useState(null);
@@ -78,6 +75,7 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       });
       setClient(contentfulClient);
 
+      // load photo
       if (item.photo) {
         // get asset from contentful
         contentfulClient

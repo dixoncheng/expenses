@@ -1,24 +1,25 @@
 import React, { useEffect } from "react";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri, useAuthRequest } from "expo-auth-session";
-import { Button, StyleSheet, SafeAreaView, AsyncStorage } from "react-native";
+import { Button, StyleSheet, SafeAreaView } from "react-native";
+import { useDispatch } from "react-redux";
 import { CONTENTFUL_CLIENT_ID } from "react-native-dotenv";
 import contentful from "../constants/contentful";
+import { loginUser } from "../actions";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen = ({ login }: { login: Function }) => {
-  const useProxy = true;
+const LoginScreen = () => {
+  const dispatch = useDispatch();
 
+  const useProxy = true;
   const discovery = {
     authorizationEndpoint: contentful.authorizationEndpoint,
   };
-
   const redirectUri = makeRedirectUri({
     native: "expenses://redirect",
     useProxy,
   });
-
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: CONTENTFUL_CLIENT_ID,
@@ -31,20 +32,9 @@ const LoginScreen = ({ login }: { login: Function }) => {
 
   useEffect(() => {
     if (response && response.type === "success") {
-      console.log(response);
-      saveToken(response.params.access_token);
+      dispatch(loginUser(response.params.access_token));
     }
   }, [response]);
-
-  const saveToken = async (accessToken: string) => {
-    try {
-      await AsyncStorage.setItem("accessToken", accessToken);
-      login();
-    } catch (error) {
-      // Error saving data
-      alert("Login error");
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>

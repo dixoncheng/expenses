@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import { Navigation, ListItem } from "../types";
 import {
   FlatList,
@@ -7,21 +7,18 @@ import {
   Text,
   TouchableOpacity,
   View,
-  AsyncStorage,
 } from "react-native";
 import moment from "moment";
-import contentful from "../constants/contentful";
-
-const {
-  createClient,
-} = require("contentful-management/dist/contentful-management.browser.min.js");
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser, fetchExpenses } from "../actions";
 
 interface HomeScreenProps extends Navigation {
   route: any;
 }
 
 const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
-  const [items, setItems] = useState([]);
+  const dispatch = useDispatch();
+  const { items } = useSelector((state: any) => state.expenseReducer);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -29,7 +26,7 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
       headerLeft: () => (
         <Button
           onPress={() => {
-            AsyncStorage.removeItem("accessToken");
+            dispatch(logoutUser());
           }}
           title="Logout"
         />
@@ -45,57 +42,12 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
     });
   }, [navigation]);
 
-  const fetchData = async () => {
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    const client = createClient({
-      accessToken,
-    });
-    client
-      .getSpace(contentful.spaceId)
-      .then((space: any) => space.getEnvironment(contentful.env))
-      .then((environment: any) =>
-        environment.getEntries({
-          content_type: contentful.contentType,
-          select:
-            "sys.id,fields.amount,fields.category,fields.date,fields.notes,fields.photo",
-          order: "-fields.date",
-        })
-      )
-      .then((response: any) => {
-        // console.log(response);
-        setItems(
-          response.items.map(
-            ({ sys, fields: { photo, date, amount, category, notes } }) => {
-              // if (item.fields.photo) {
-              //   console.log(item);
-              // }
-              return {
-                id: sys.id,
-                // photo:
-                //   item.fields.photo && item.fields.photo.fields.file
-                //     ? `https:${item.fields.photo.fields.file.url}`
-                //     : null,
-                photo: photo && photo["en-US"].sys.id,
-                date: date && new Date(date["en-US"]),
-                amount: amount && amount["en-US"] + "",
-                category: category && category["en-US"],
-                notes: notes && notes["en-US"],
-              };
-            }
-          )
-        );
-      })
-      .catch(function (error: any) {
-        console.log(error);
-      });
-  };
-
   useEffect(() => {
-    fetchData();
+    dispatch(fetchExpenses());
   }, []);
 
   if (route.params?.refresh) {
-    fetchData();
+    dispatch(fetchExpenses());
   }
 
   const onItemPress = (item: ListItem) => {
@@ -114,8 +66,6 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   // };
 
   // const deleteItem = (item: ListItem) => {};
-
-  // console.log(items);
 
   return (
     <View style={styles.container}>
