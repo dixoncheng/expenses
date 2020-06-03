@@ -2,7 +2,6 @@ import { actionTypes } from "../actions";
 
 const initialState = {
   loggedIn: false,
-  client: null,
 };
 
 const userReducer = (state = initialState, action: any) => {
@@ -11,10 +10,8 @@ const userReducer = (state = initialState, action: any) => {
       return { ...state, loggedIn: true };
     case actionTypes.USER_LOGOUT:
       return { ...state, loggedIn: false };
-    case actionTypes.SET_USER_TOKEN:
-      return { ...state, userToken: action.userToken };
-    case actionTypes.SET_CLIENT:
-      return { ...state, client: action.client };
+    case actionTypes.SET_ACCESS_TOKEN:
+      return { ...state, accessToken: action.accessToken };
     default:
       return state;
   }

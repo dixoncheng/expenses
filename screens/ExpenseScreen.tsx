@@ -15,24 +15,21 @@ import {
   ActivityIndicator,
   Modal,
   Keyboard,
-  AsyncStorage,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-
+import { useSelector } from "react-redux";
 import moment from "moment";
-import contentful from "../constants/contentful";
-
-const {
-  createClient,
-} = require("contentful-management/dist/contentful-management.browser.min.js");
+import * as contentful from "../functions/contentful";
 
 interface AddExpenseProps extends Navigation {
   route: any;
 }
 
 const AddExpense = ({ navigation, route }: AddExpenseProps) => {
+  const { accessToken } = useSelector((state: any) => state.userReducer);
+
   const cameraRef = useRef<Camera>(null);
   const [item, setItem] = useState<any>(route.params?.item || {});
   const [showDatePicker, setShowDatePicker] = useState(Platform.OS === "ios");
@@ -43,13 +40,10 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   const [photoUpdated, setPhotoUpdated] = useState(false);
   const [loadedPhoto, setLoadedPhoto] = useState(null);
 
-  const [client, setClient] = useState(null);
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: item.id ? "Edit Expense" : "Add Expense",
-      headerRight: () =>
-        client && <Button onPress={() => save()} title="Save" />,
+      headerRight: () => <Button onPress={() => save()} title="Save" />,
       headerLeft: () => (
         <Button
           onPress={() =>
@@ -69,23 +63,10 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       const { status } = await Camera.requestPermissionsAsync();
       setHasCameraPermission(status === "granted");
 
-      const accessToken = await AsyncStorage.getItem("accessToken");
-      const contentfulClient = createClient({
-        accessToken,
-      });
-      setClient(contentfulClient);
-
       // load photo
       if (item.photo) {
-        // get asset from contentful
-        contentfulClient
-          .getSpace(contentful.spaceId)
-          .then((space: any) => space.getEnvironment(contentful.env))
-          .then((environment: any) => environment.getAsset(item.photo))
-          .then((asset: any) => {
-            setLoadedPhoto(asset.fields.file["en-US"].url);
-          })
-          .catch(console.error);
+        const photo = await contentful.getPhoto(accessToken, item.photo);
+        setLoadedPhoto(photo);
       }
     })();
 
@@ -104,132 +85,21 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
       // TODO upload photo
       let newPhoto: any = {};
       if (photoUpdated) {
-        newPhoto = await uploadImageAsync(item.photo.uri);
+        newPhoto = await contentful.uploadImage(accessToken, item.photo.uri);
       }
 
       // TODO delete existing linked image if available
       // if (photoUpdated && photoRef) {
       // }
-
-      // save to db
-      client
-        .getSpace(contentful.spaceId)
-        .then((space: any) => space.getEnvironment(contentful.env))
-        .then((environment: any) => {
-          const fields = {
-            amount: { "en-US": parseFloat(item.amount) },
-            notes: { "en-US": item.notes },
-            date: { "en-US": item.date },
-            category: { "en-US": item.category },
-          };
-
-          if (photoUpdated) {
-            // @ts-ignore
-            fields.photo = {
-              "en-US": {
-                sys: {
-                  id: newPhoto.sys.id,
-                  type: "Link",
-                  linkType: "Asset",
-                },
-              },
-            };
-          }
-
-          if (item.id) {
-            // update
-            return environment.getEntry(item.id).then((entry: any) => {
-              entry.fields = { ...entry.fields, ...fields };
-              return entry.update();
-            });
-          } else {
-            // create
-            return environment.createEntry(contentful.contentType, {
-              fields,
-            });
-          }
-        })
-        .then((entry: any) => {
-          // console.log(entry);
-          return entry.publish();
-        })
-
-        .then(() => {
-          // back to list
-          setLoading(false);
-
-          // TODO set home to reload
-          navigation.navigate("Home", { refresh: true });
-        })
-        .catch(console.error);
+      await contentful.saveExpense(accessToken, item, photoUpdated, newPhoto);
+      // back to list
+      setLoading(false);
+      navigation.navigate("Home", { refresh: true });
     } catch (error) {
       // console.log("err");
       console.log(error);
       setLoading(false);
     }
-  };
-
-  const uploadImageAsync = async (uri: string) => {
-    // Why are we using XMLHttpRequest? See:
-    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function (e) {
-        console.log(e);
-        reject(new TypeError("Network request failed"));
-      };
-      xhr.responseType = "arraybuffer";
-      xhr.open("GET", uri, true);
-      xhr.send(null);
-    });
-
-    const fileName = uri.split("/").pop();
-    // console.log(fileName);
-
-    let uriParts = uri.split(".");
-    let fileType = uriParts[uriParts.length - 1];
-    let contentType = `images/${fileType}`;
-    // console.log(contentType);
-
-    let fields = {
-      title: {
-        "en-US": fileName,
-      },
-      file: {
-        "en-US": {
-          contentType,
-          fileName,
-          file: blob,
-        },
-      },
-    };
-
-    return client
-      .getSpace(contentful.spaceId)
-      .then((space: any) => space.getEnvironment(contentful.env))
-      .then((environment: any) =>
-        environment.createAssetFromFiles({
-          fields,
-        })
-      )
-      .then((asset: any) => {
-        // console.log("processing asset...");
-        return asset.processForLocale("en-US", {
-          processingCheckWait: 2000,
-        });
-      })
-      .then((asset: any) => {
-        // console.log("publishing asset...");
-        return asset.publish();
-      })
-      .then((asset: any) => {
-        // console.log(asset);
-        return asset;
-      })
-      .catch(console.error);
   };
 
   const selectCategory = () => {

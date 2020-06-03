@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
-import { logoutUser, fetchExpenses } from "../actions";
+import { logoutUser, getExpenses } from "../actions";
 
 interface HomeScreenProps extends Navigation {
   route: any;
@@ -19,9 +19,9 @@ interface HomeScreenProps extends Navigation {
 const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   const dispatch = useDispatch();
   const { items } = useSelector((state: any) => state.expenseReducer);
-
   useLayoutEffect(() => {
     navigation.setOptions({
+      // headerTitleAlign: "center",
       headerTitle: "Expenses",
       headerLeft: () => (
         <Button
@@ -43,11 +43,11 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   }, [navigation]);
 
   useEffect(() => {
-    dispatch(fetchExpenses());
+    dispatch(getExpenses());
   }, []);
 
   if (route.params?.refresh) {
-    dispatch(fetchExpenses());
+    dispatch(getExpenses());
   }
 
   const onItemPress = (item: ListItem) => {

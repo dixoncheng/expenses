@@ -7,22 +7,40 @@ import HomeScreen from "../screens/HomeScreen";
 import ReportsScreen from "../screens/ReportsScreen";
 import ExpenseScreen from "../screens/ExpenseScreen";
 import SelectCategoryScreen from "../screens/SelectCategoryScreen";
+import screenOptions from "../constants/screenOptions";
 
 const BottomTab = createBottomTabNavigator();
 
 const HomeStack = createStackNavigator();
+
 const HomeStackScreen = () => (
   <HomeStack.Navigator>
-    <HomeStack.Screen name="Home" component={HomeScreen} />
-    <HomeStack.Screen name="Expense" component={ExpenseScreen} />
-    <HomeStack.Screen name="SelectCategory" component={SelectCategoryScreen} />
+    <HomeStack.Screen
+      name="Home"
+      component={HomeScreen}
+      options={screenOptions}
+    />
+    <HomeStack.Screen
+      name="Expense"
+      component={ExpenseScreen}
+      options={screenOptions}
+    />
+    <HomeStack.Screen
+      name="SelectCategory"
+      component={SelectCategoryScreen}
+      options={screenOptions}
+    />
   </HomeStack.Navigator>
 );
 
 const ReportsStack = createStackNavigator();
 const ReportsStackScreen = () => (
   <ReportsStack.Navigator>
-    <ReportsStack.Screen name="Reports" component={ReportsScreen} />
+    <ReportsStack.Screen
+      name="Reports"
+      component={ReportsScreen}
+      options={screenOptions}
+    />
   </ReportsStack.Navigator>
 );
 
@@ -41,7 +59,7 @@ export default function BottomTabNavigator() {
           title: "Expenses",
           tabBarIcon: ({ focused }) => (
             <TabBarIcon focused={focused} name="ios-paper" />
-          )
+          ),
         }}
       />
       <BottomTab.Screen
@@ -51,7 +69,7 @@ export default function BottomTabNavigator() {
           title: "Reports",
           tabBarIcon: ({ focused }) => (
             <TabBarIcon focused={focused} name="ios-archive" />
-          )
+          ),
         }}
       />
     </BottomTab.Navigator>
