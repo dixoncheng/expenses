@@ -18,11 +18,11 @@ const BottomTab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
 
 const HomeStackScreen = () => (
-  <HomeStack.Navigator headerMode="none">
+  <HomeStack.Navigator>
     <HomeStack.Screen
       name="Home"
       component={HomeScreen}
-      options={screenOptions}
+      options={{ ...screenOptions, headerShown: false }}
     />
     <HomeStack.Screen
       name="Expense"
@@ -39,11 +39,11 @@ const HomeStackScreen = () => (
 
 const ReportsStack = createStackNavigator();
 const ReportsStackScreen = () => (
-  <ReportsStack.Navigator headerMode="none">
+  <ReportsStack.Navigator>
     <ReportsStack.Screen
       name="Reports"
       component={ReportsScreen}
-      options={screenOptions}
+      options={{ ...screenOptions, headerShown: false }}
     />
   </ReportsStack.Navigator>
 );
