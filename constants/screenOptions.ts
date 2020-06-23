@@ -1,4 +1,5 @@
 import Colors from "../constants/Colors";
+import Theme from "../constants/Theme";
 
 export default {
   headerTitleAlign: "center",
@@ -7,7 +8,7 @@ export default {
   //   height: 140,
   // },
   headerTitleStyle: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     color: Colors.tintColor,
     fontWeight: "bold",
   },

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
+import { useSafeArea } from "react-native-safe-area-context";
 
 import TabBarIcon from "../components/TabBarIcon";
 import HomeScreen from "../screens/HomeScreen";
@@ -10,13 +11,14 @@ import SelectCategoryScreen from "../screens/SelectCategoryScreen";
 import screenOptions from "../constants/screenOptions";
 
 import Colors from "../constants/Colors";
+import Theme from "../constants/Theme";
 
 const BottomTab = createBottomTabNavigator();
 
 const HomeStack = createStackNavigator();
 
 const HomeStackScreen = () => (
-  <HomeStack.Navigator>
+  <HomeStack.Navigator headerMode="none">
     <HomeStack.Screen
       name="Home"
       component={HomeScreen}
@@ -37,7 +39,7 @@ const HomeStackScreen = () => (
 
 const ReportsStack = createStackNavigator();
 const ReportsStackScreen = () => (
-  <ReportsStack.Navigator>
+  <ReportsStack.Navigator headerMode="none">
     <ReportsStack.Screen
       name="Reports"
       component={ReportsScreen}
@@ -52,16 +54,19 @@ export default function BottomTabNavigator() {
   // https://reactnavigation.org/docs/en/screen-options-resolution.html
   //   navigation.setOptions({ headerTitle: getHeaderTitle(route) });
 
+  const insets = useSafeArea();
+
   return (
     <BottomTab.Navigator
       tabBarOptions={{
         style: {
-          height: 90,
-          padding: 10,
+          height: 70 + insets.bottom,
+          padding: 12,
         },
         activeTintColor: Colors.tabIconSelected,
         labelStyle: {
-          fontFamily: "Futura",
+          fontFamily: Theme.fontFamily,
+          marginBottom: 12,
         },
       }}
     >

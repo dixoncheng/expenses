@@ -12,16 +12,19 @@ import {
   Alert,
   AsyncStorage,
   Image,
+  Dimensions,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system";
 import * as MailComposer from "expo-mail-composer";
 import moment from "moment";
 import XLSX from "xlsx";
+import { useSafeArea } from "react-native-safe-area-context";
 import Colors from "../constants/Colors";
 import Categories from "../constants/Categories";
 import contentful from "../constants/contentful";
 import { Navigation } from "../types";
+import Theme from "../constants/Theme";
 
 const {
   createClient,
@@ -39,23 +42,27 @@ const ReportsScreen = ({ navigation, route }: ReportsScreenProps) => {
   const [loading, setLoading] = useState(false);
   const [showingModal, setShowingModal] = useState(false);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerStyle: {
-        height: 140,
-      },
-      headerTitle: (
-        <Image
-          source={require("../assets/images/Report-Header.png")}
-          style={{
-            width: 380,
-            height: 99,
-            resizeMode: "contain",
-          }}
-        />
-      ),
-    });
-  }, [navigation]);
+  const insets = useSafeArea();
+  const win = Dimensions.get("window");
+  const headerHeight = (203 * win.width) / 750;
+
+  // useLayoutEffect(() => {
+  //   navigation.setOptions({
+  //     headerStyle: {
+  //       height: 140,
+  //     },
+  //     headerTitle: (
+  //       <Image
+  //         source={require("../assets/images/Report-Header.png")}
+  //         style={{
+  //           width: 380,
+  //           height: 99,
+  //           resizeMode: "contain",
+  //         }}
+  //       />
+  //     ),
+  //   });
+  // }, [navigation]);
 
   useEffect(() => {
     selectDateFrom(null, new Date());
@@ -215,6 +222,16 @@ const ReportsScreen = ({ navigation, route }: ReportsScreenProps) => {
 
   return (
     <View style={styles.container}>
+      <View style={{ backgroundColor: "white", paddingTop: insets.top }}>
+        <Image
+          source={require("../assets/images/Report-Header.png")}
+          style={{
+            width: "100%",
+            height: headerHeight,
+            resizeMode: "contain",
+          }}
+        />
+      </View>
       {Platform.OS === "ios" && (
         <View>
           <Text style={styles.label}>From</Text>
@@ -344,7 +361,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 18,
     textAlign: "center",
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     color: Colors.tintColor,
   },
   button: {
@@ -352,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tintColor,
   },
   buttonText: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     color: "white",
     textAlign: "center",
     fontSize: 18,

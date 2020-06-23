@@ -23,6 +23,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useSelector } from "react-redux";
 import moment from "moment";
 import Colors from "../constants/Colors";
+import Theme from "../constants/Theme";
 
 import * as contentful from "../functions/contentful";
 
@@ -374,12 +375,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   label: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     fontSize: 16,
     color: Colors.tintColor,
   },
   textField: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     fontSize: 18,
     flex: 1,
     textAlign: "right",

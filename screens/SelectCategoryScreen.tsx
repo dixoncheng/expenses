@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import Colors from "../constants/Colors";
 import Categories from "../constants/Categories";
+import Theme from "../constants/Theme";
 
 type CategoryItem = string;
 
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "white",
   },
   itemText: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     fontSize: 16,
     color: Colors.tintColor,
   },

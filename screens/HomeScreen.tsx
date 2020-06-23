@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect } from "react";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { useSafeArea } from "react-native-safe-area-context";
 import { Navigation, ListItem } from "../types";
 import {
   FlatList,
@@ -9,12 +10,14 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Dimensions,
 } from "react-native";
 import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser, getExpenses } from "../actions";
 
 import Colors from "../constants/Colors";
+import Theme from "../constants/Theme";
 
 interface HomeScreenProps extends Navigation {
   route: any;
@@ -23,58 +26,45 @@ interface HomeScreenProps extends Navigation {
 const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   const dispatch = useDispatch();
   const { items } = useSelector((state: any) => state.expenseReducer);
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      // headerTitleAlign: "center",
-      headerStyle: {
-        height: 140,
-      },
-      headerTitle: (
-        // <Text>
-        //   <Image
-        //     source={require("../assets/images/robot-dev.png")}
-        //     style={{
-        //       // width: 10,
-        //       height: 50,
-        //       resizeMode: "contain",
-        //     }}
-        //   />
-        // </Text>
-        // <Image
-        //     source={require("../assets/images/Expensies-Header.png")}
-        //     style={{
-        //       width: "100%",
-        //       // height: 50,
-        //       // resizeMode: "contain",
-        //     }}
-        //   />
-        <Image
-          source={require("../assets/images/Expensies-Header.png")}
-          style={{
-            width: 380,
-            height: 99,
-            resizeMode: "contain",
-          }}
-        />
-      ),
-      // headerLeft: () => (
-      //   <Button
-      //     onPress={() => {
-      //       dispatch(logoutUser());
-      //     }}
-      //     title="Logout"
-      //   />
-      // ),
-      // headerRight: () => (
-      //   <Button
-      //     onPress={() => {
-      //       navigation.navigate("AddExpense");
-      //     }}
-      //     title="Add"
-      //   />
-      // ),
-    });
-  }, [navigation]);
+  const insets = useSafeArea();
+  const win = Dimensions.get("window");
+  const headerHeight = (203 * win.width) / 750;
+
+  // useLayoutEffect(() => {
+  //   navigation.setOptions({
+  //     // headerTitleAlign: "center",
+  //     // headerStyle: {
+  //       // height: 100 + insets.top,
+  //     // },
+  //     // headerTitle: (
+  //     //   <Image
+  //     //     source={require("../assets/images/Expensies-Header.png")}
+  //     //     style={{
+  //     //       width: 100,
+  //     //       height: 100,
+  //     //       resizeMode: "contain",
+  //     //     }}
+  //     //   />
+  //     // ),
+
+  //     // headerLeft: () => (
+  //     //   <Button
+  //     //     onPress={() => {
+  //     //       dispatch(logoutUser());
+  //     //     }}
+  //     //     title="Logout"
+  //     //   />
+  //     // ),
+  //     // headerRight: () => (
+  //     //   <Button
+  //     //     onPress={() => {
+  //     //       navigation.navigate("AddExpense");
+  //     //     }}
+  //     //     title="Add"
+  //     //   />
+  //     // ),
+  //   });
+  // }, [navigation]);
 
   useEffect(() => {
     dispatch(getExpenses());
@@ -103,6 +93,17 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
 
   return (
     <View style={styles.container}>
+      <View style={{ backgroundColor: "white", paddingTop: insets.top }}>
+        <Image
+          source={require("../assets/images/Expensies-Header.png")}
+          style={{
+            width: "100%",
+            height: headerHeight,
+            resizeMode: "contain",
+          }}
+        />
+      </View>
+
       <FlatList
         data={items}
         renderItem={({ item }: { item: ListItem }) => (
@@ -159,20 +160,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   itemCat: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     fontWeight: "bold",
     marginBottom: 4,
     color: Colors.tintColor,
   },
   itemDate: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     textTransform: "uppercase",
     // color: Colors.tintColor,
     color: "#9e9b8f",
     fontSize: 12,
   },
   itemAmount: {
-    fontFamily: "Futura",
+    fontFamily: Theme.fontFamily,
     fontSize: 18,
     color: "#496447",
   },
