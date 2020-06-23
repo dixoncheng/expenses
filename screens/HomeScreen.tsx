@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect } from "react";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { Navigation, ListItem } from "../types";
 import {
   FlatList,
@@ -7,10 +8,13 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser, getExpenses } from "../actions";
+
+import Colors from "../constants/Colors";
 
 interface HomeScreenProps extends Navigation {
   route: any;
@@ -22,23 +26,53 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       // headerTitleAlign: "center",
-      headerTitle: "Expenses",
-      headerLeft: () => (
-        <Button
-          onPress={() => {
-            dispatch(logoutUser());
+      headerStyle: {
+        height: 140,
+      },
+      headerTitle: (
+        // <Text>
+        //   <Image
+        //     source={require("../assets/images/robot-dev.png")}
+        //     style={{
+        //       // width: 10,
+        //       height: 50,
+        //       resizeMode: "contain",
+        //     }}
+        //   />
+        // </Text>
+        // <Image
+        //     source={require("../assets/images/Expensies-Header.png")}
+        //     style={{
+        //       width: "100%",
+        //       // height: 50,
+        //       // resizeMode: "contain",
+        //     }}
+        //   />
+        <Image
+          source={require("../assets/images/Expensies-Header.png")}
+          style={{
+            width: 380,
+            height: 99,
+            resizeMode: "contain",
           }}
-          title="Logout"
         />
       ),
-      headerRight: () => (
-        <Button
-          onPress={() => {
-            navigation.navigate("AddExpense");
-          }}
-          title="Add"
-        />
-      ),
+      // headerLeft: () => (
+      //   <Button
+      //     onPress={() => {
+      //       dispatch(logoutUser());
+      //     }}
+      //     title="Logout"
+      //   />
+      // ),
+      // headerRight: () => (
+      //   <Button
+      //     onPress={() => {
+      //       navigation.navigate("AddExpense");
+      //     }}
+      //     title="Add"
+      //   />
+      // ),
     });
   }, [navigation]);
 
@@ -73,24 +107,27 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
         data={items}
         renderItem={({ item }: { item: ListItem }) => (
           <TouchableOpacity
-            style={styles.item}
             onPress={() => onItemPress(item)}
             // onLongPress={() => onItemLongPress(item)}
           >
-            <Text>{item.category}</Text>
-            <Text>
-              $
-              {parseFloat(item.amount) >= 0
-                ? parseFloat(item.amount).toFixed(2)
-                : 0}
-            </Text>
-            <Text>{moment(item.date).format("MMMM D, YYYY")}</Text>
+            <View style={styles.item}>
+              <View>
+                <Text style={styles.itemCat}>{item.category}</Text>
+                <Text style={styles.itemDate}>
+                  {moment(item.date).format("D MMM YYYY")}
+                </Text>
+              </View>
+              <Text style={styles.itemAmount}>
+                $
+                {parseFloat(item.amount) >= 0
+                  ? parseFloat(item.amount).toFixed(2)
+                  : 0}
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => (
-          <View
-            style={{ borderBottomWidth: 1, borderBottomColor: "lightgrey" }}
-          />
+          <View style={{ borderBottomWidth: 2, borderBottomColor: "white" }} />
         )}
         // keyExtractor={(item, index) => index.toString()}
         // extraData={}
@@ -98,6 +135,13 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
         // onEndReachedThreshold={0.5}
         initialNumToRender={10}
       />
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate("AddExpense")}
+        style={styles.fab}
+      >
+        <FontAwesome5 name="plus-circle" size={36} color="#496447" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -105,10 +149,37 @@ const HomeScreen = ({ navigation, route }: HomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f8f6",
   },
   item: {
     padding: 10,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  itemCat: {
+    fontFamily: "Futura",
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: Colors.tintColor,
+  },
+  itemDate: {
+    fontFamily: "Futura",
+    textTransform: "uppercase",
+    // color: Colors.tintColor,
+    color: "#9e9b8f",
+    fontSize: 12,
+  },
+  itemAmount: {
+    fontFamily: "Futura",
+    fontSize: 18,
+    color: "#496447",
+  },
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
   },
 });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { Navigation } from "../types";
 import {
   Platform,
@@ -21,6 +22,8 @@ import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useSelector } from "react-redux";
 import moment from "moment";
+import Colors from "../constants/Colors";
+
 import * as contentful from "../functions/contentful";
 
 interface AddExpenseProps extends Navigation {
@@ -43,17 +46,34 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: item.id ? "Edit Expense" : "Add Expense",
-      headerRight: () => <Button onPress={() => save()} title="Save" />,
+      // headerRight: () => <Button onPress={() => save()} title="Save" />,
+      headerRight: () => (
+        <TouchableOpacity onPress={() => save()}>
+          <FontAwesome5
+            style={styles.headerButton}
+            name="check"
+            size={26}
+            color={Colors.tintColor}
+          />
+        </TouchableOpacity>
+      ),
       headerLeft: () => (
-        <Button
+        <TouchableOpacity
           onPress={() =>
             // route.params?.item
             //   ? navigation.navigate("Home")
             //   : navigation.navigate("TabNavigator")
             navigation.navigate("Home")
           }
-          title={route.params?.item ? "Back" : "Cancel"}
-        />
+          // title={route.params?.item ? "Back" : "Cancel"}
+        >
+          <FontAwesome5
+            style={styles.headerButton}
+            name="arrow-left"
+            size={26}
+            color={Colors.tintColor}
+          />
+        </TouchableOpacity>
       ),
     });
   }, [navigation, item]);
@@ -242,19 +262,43 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                   <View style={{ flex: 1 }}></View>
 
                   <View style={{ flex: 1 }}>
-                    <Button title="Take photo" onPress={takePhoto} />
-                  </View>
-
-                  <TouchableOpacity style={{ flex: 1 }} onPress={pickPhoto}>
-                    <Text
+                    {/* <Button title="Take photo" onPress={takePhoto} /> */}
+                    <TouchableOpacity
                       style={{
-                        textAlign: "right",
-                        color: "white",
+                        flex: 1,
+                        position: "absolute",
+                        bottom: 20,
+                        // left: "50%",
+                        alignSelf: "center",
                       }}
+                      onPress={takePhoto}
                     >
-                      Gallery
-                    </Text>
-                  </TouchableOpacity>
+                      <FontAwesome5
+                        style={styles.cameraButton}
+                        name="camera"
+                        size={32}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        position: "absolute",
+                        bottom: 20,
+                        right: 10,
+                      }}
+                      onPress={pickPhoto}
+                    >
+                      <FontAwesome5
+                        style={styles.cameraButton}
+                        name="file-image"
+                        size={30}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </Camera>
@@ -271,7 +315,24 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
                 justifyContent: "flex-end",
               }}
             >
-              <Button title="Retake photo" onPress={retakePhoto} />
+              {/* <Button title="Retake photo" onPress={retakePhoto} /> */}
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  position: "absolute",
+                  top: 15,
+                  right: 15,
+                  // alignSelf: "center",
+                }}
+                onPress={retakePhoto}
+              >
+                <FontAwesome5
+                  style={styles.cameraButton}
+                  name="trash"
+                  size={26}
+                  color="white"
+                />
+              </TouchableOpacity>
             </ImageBackground>
           ) : null}
         </View>
@@ -303,22 +364,33 @@ const AddExpense = ({ navigation, route }: AddExpenseProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: Colors.background,
   },
   row: {
     flexDirection: "row",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "lightgrey",
+    borderBottomWidth: 2,
+    borderBottomColor: "white",
     justifyContent: "space-between",
   },
   label: {
-    fontSize: 18,
+    fontFamily: "Futura",
+    fontSize: 16,
+    color: Colors.tintColor,
   },
   textField: {
+    fontFamily: "Futura",
     fontSize: 18,
     flex: 1,
     textAlign: "right",
+    color: Colors.tintColor,
+  },
+  headerButton: {
+    padding: 12,
+    paddingTop: 9,
+  },
+  cameraButton: {
+    textAlign: "center",
   },
 });
 

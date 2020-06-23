@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   Platform,
   View,
@@ -7,30 +7,55 @@ import {
   Button,
   ActivityIndicator,
   Modal,
+  TouchableOpacity,
   TouchableHighlight,
   Alert,
   AsyncStorage,
+  Image,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system";
 import * as MailComposer from "expo-mail-composer";
 import moment from "moment";
 import XLSX from "xlsx";
-
+import Colors from "../constants/Colors";
 import Categories from "../constants/Categories";
 import contentful from "../constants/contentful";
+import { Navigation } from "../types";
 
 const {
   createClient,
 } = require("contentful-management/dist/contentful-management.browser.min.js");
 
-const ReportsScreen = () => {
+interface ReportsScreenProps extends Navigation {
+  route: any;
+}
+
+const ReportsScreen = ({ navigation, route }: ReportsScreenProps) => {
   const [dateFrom, setDateFrom] = useState(new Date());
   const [dateTo, setDateTo] = useState(new Date());
   const [showDateFrom, setShowDateFrom] = useState(false);
   const [showDateTo, setShowDateTo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showingModal, setShowingModal] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        height: 140,
+      },
+      headerTitle: (
+        <Image
+          source={require("../assets/images/Report-Header.png")}
+          style={{
+            width: 380,
+            height: 99,
+            resizeMode: "contain",
+          }}
+        />
+      ),
+    });
+  }, [navigation]);
 
   useEffect(() => {
     selectDateFrom(null, new Date());
@@ -271,7 +296,12 @@ const ReportsScreen = () => {
         </View>
       )}
 
-      <Button title="Generate" onPress={onGenerate} />
+      {/* <Button title="Generate" onPress={onGenerate} /> */}
+      <TouchableOpacity onPress={onGenerate}>
+        <View style={styles.button}>
+          <Text style={styles.buttonText}>Get Report</Text>
+        </View>
+      </TouchableOpacity>
 
       <Modal
         animationType="fade"
@@ -299,7 +329,7 @@ const ReportsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: Colors.background,
   },
   row: {
     // flex: 1,
@@ -314,6 +344,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 18,
     textAlign: "center",
+    fontFamily: "Futura",
+    color: Colors.tintColor,
+  },
+  button: {
+    padding: 15,
+    backgroundColor: Colors.tintColor,
+  },
+  buttonText: {
+    fontFamily: "Futura",
+    color: "white",
+    textAlign: "center",
+    fontSize: 18,
   },
 });
 

@@ -9,6 +9,8 @@ import ExpenseScreen from "../screens/ExpenseScreen";
 import SelectCategoryScreen from "../screens/SelectCategoryScreen";
 import screenOptions from "../constants/screenOptions";
 
+import Colors from "../constants/Colors";
+
 const BottomTab = createBottomTabNavigator();
 
 const HomeStack = createStackNavigator();
@@ -51,14 +53,25 @@ export default function BottomTabNavigator() {
   //   navigation.setOptions({ headerTitle: getHeaderTitle(route) });
 
   return (
-    <BottomTab.Navigator>
+    <BottomTab.Navigator
+      tabBarOptions={{
+        style: {
+          height: 90,
+          padding: 10,
+        },
+        activeTintColor: Colors.tabIconSelected,
+        labelStyle: {
+          fontFamily: "Futura",
+        },
+      }}
+    >
       <BottomTab.Screen
         name="HomeTab"
         component={HomeStackScreen}
         options={{
           title: "Expenses",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="ios-paper" />
+            <TabBarIcon focused={focused} name="receipt" />
           ),
         }}
       />
@@ -68,7 +81,7 @@ export default function BottomTabNavigator() {
         options={{
           title: "Reports",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} name="ios-archive" />
+            <TabBarIcon focused={focused} name="file-alt" />
           ),
         }}
       />
