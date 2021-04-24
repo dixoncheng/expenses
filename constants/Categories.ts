@@ -3,7 +3,7 @@ export default [
   "Computer & Equipment",
   "Entertainment",
   "Hosting/Domains",
-  "Home Office Utilities",
+  "H/O Utilities",
   "Contractor",
   "Home Office Expense",
   "Internet",
